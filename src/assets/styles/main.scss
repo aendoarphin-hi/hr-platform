@@ -45,3 +45,8 @@ $table-hover-bg: rgba(0, 0, 0, 0.028);
 #Calendar-view > div.card.p-3.mt-3 > div > div.fc-forma-zi1.fc-forma-ku3.fc-forma-Z7Q.fc-forma-IJJ.fc-forma-dl1.fc-forma-1sP.fc-forma-dNl.fc-forma-XpK.fc-forma-N2M.fc-forma-wwb.fc-forma-RJG.fc-forma-tfB.fc-forma-1Wx > div:nth-child(3) > div {
   gap: .5rem !important;
 }
+
+// animate.css infinite flashing for loading
+.animate-flash-infinite {
+  animation: flash 4s infinite;
+}

@@ -8,7 +8,7 @@ export const user = {
   perm: "0",
   email: "apineda@haydenindustrial.com",
   position: "Software Developer",
-  location: "Tulsa",
+  location: "Mingo",
   id_manager: null,
   phone: "918-906-2551",
   carrier: "",

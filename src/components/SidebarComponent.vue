@@ -22,9 +22,8 @@
         </a>
       </li>
     </ul>
-
+    <span class="w-100 text-center text-muted" style="font-size: 10px;">HAYDEN {{ this.$appname }} v{{ this.$version }}</span>
     <hr />
-
     <div id="sidebar-footer">
       <router-link to="/profile" class="text-decoration-none">
         <AccountCircle />&nbsp;&nbsp;<span>{{ this.user.name }}</span>

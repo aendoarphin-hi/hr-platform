@@ -8,6 +8,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "vue-material-design-icons/styles.css";
 import "./assets/styles/main.scss";
+import "animate.css";
 
 // app utilities
 import { debounce } from "@/common/helpers.js";

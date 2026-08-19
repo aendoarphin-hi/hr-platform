@@ -11,6 +11,7 @@
     "@fullcalendar/core": "^6.1.21",
     "@fullcalendar/daygrid": "^6.1.21",
     "@fullcalendar/vue3": "^7.0.1",
+    "animate.css": "^4.1.1",
     "axios": "^1.18.1",
     "bootstrap": "^5.3.8",
     "core-js": "^3.8.3",

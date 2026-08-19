@@ -1,5 +1,5 @@
 <template>
-  <div :id="`${$route.name}-view`" class="w-100 p-3">
+  <div v-if="!loading" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
       <h5><strong>HAYDEN</strong> {{ this.$appname }}</h5>
@@ -45,14 +45,16 @@
                       ? content.length
                       : s.title === 'playlists'
                         ? playlists.length
-                        : 0
+                        : s.title === 'approvals'
+                          ? approvals.length
+                          : 0
                 }}</div>
               </div>
-              <div v-if="s.title === 'displays'"
-                class="text-muted small align-self-start d-flex flex-column my-auto cursor-pointer">
-                <div v-for="d in displayStats" :key="'stat-' + d.label"
-                  class="align-items-center justify-content-end rounded d-flex text-uppercase fw-semibold small"
-                  :class="`text-${d.color} ${d.value === 0 ? 'd-none' : ''}`">{{ d.label }}&nbsp;{{ d.value }}</div>
+              <div class="text-muted gap-1 small align-self-start d-flex flex-column my-auto cursor-pointer">
+                <div v-for="d in subStats(s.title)" :key="'stat-' + d.label"
+                  class="badge badge-pill align-items-center justify-content-end rounded d-flex text-uppercase fw-semibold small"
+                  :class="`text-${d.color} bg-${d.bgColor} ${d.value === 0 ? 'd-none' : ''}`"><span class="me-auto">{{
+                    d.label }}</span>&nbsp;&nbsp;&nbsp;{{ d.value }}</div>
               </div>
             </div>
           </div>
@@ -75,11 +77,12 @@
               </span>
               Upcoming Announcements
             </h6>
-            <router-link to="/events" class="small link-primary text-decoration-none">Manage Announcements
+            <router-link to="/calendar?filter=announcements" class="small link-primary text-decoration-none">Manage Announcements
               &nbsp;▸</router-link>
           </div>
           <ul class="list-group list-group-flush">
-            <li v-for="(a, i) in upcomingAnnouncements.slice(0, 5)" :key="i" class="list-group-item d-flex align-items-center gap-3">
+            <li v-for="(a, i) in upcomingAnnouncements.slice(0, 5)" :key="i"
+              class="list-group-item d-flex align-items-center gap-3">
               <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold text-truncate">{{ a.title }}</div>
                 <div class="text-muted small">
@@ -92,7 +95,7 @@
                 </div>
               </div>
               <span class="badge rounded-pill text-capitalize" :class="announcementBadgeClass(a.subtype)">{{ a.subtype
-              }}</span>
+                }}</span>
             </li>
           </ul>
         </div>
@@ -106,7 +109,8 @@
               </span>
               Recent Uploads
             </h6>
-            <router-link :to="{ name: 'Displays', query: { tab: 'content' } }" class="small link-primary text-decoration-none">View Library
+            <router-link :to="{ name: 'Displays', query: { tab: 'content' } }"
+              class="small link-primary text-decoration-none">View Library
               &nbsp;▸</router-link>
           </div>
           <div class="card-body">
@@ -119,7 +123,8 @@
                     </div>
                     <div class="min-w-0">
                       <div class="fw-semibold text-truncate">{{ u.title }}</div>
-                      <div class="text-muted small">{{ u.filename }} &middot; {{ new Date(u.created_at).toDateString() }}</div>
+                      <div class="text-muted small">{{ u.filename }} &middot; {{ new Date(u.created_at).toDateString()
+                        }}</div>
                     </div>
                   </div>
                 </div>
@@ -228,6 +233,9 @@
       </div>
     </div>
   </div>
+  <div v-else class="d-flex justify-content-center align-items-center">
+    <LoadingComponent message="Loading dashboard..." />
+  </div>
 </template>
 
 <script>
@@ -249,6 +257,7 @@ import Calendar from "vue-material-design-icons/Calendar.vue";
 import HelpModalComponent from "@/components/HelpModalComponent.vue";
 
 import { markRaw } from "vue";
+import LoadingComponent from "@/components/LoadingComponent.vue";
 
 export default {
   name: "DashboardView",
@@ -268,45 +277,19 @@ export default {
     FileDocument,
     Calendar,
 
-    HelpModalComponent
+    HelpModalComponent,
+    LoadingComponent
   },
 
   data() {
     return {
+      loading: false,
+      quickStats: [],
       activity: [],
-      quickStats: [
-        {
-          title: "displays",
-          total: 0,
-          icon: markRaw(Television),
-          color: "success",
-          stat: {},
-        },
-        {
-          title: "content",
-          total: 0,
-          icon: markRaw(FileDocument),
-          color: "danger",
-          stat: {},
-        },
-        {
-          title: "playlists",
-          total: 0,
-          icon: markRaw(PlaylistPlay),
-          color: "secondary",
-          stat: {},
-        },
-        {
-          title: "approvals",
-          total: 0,
-          icon: markRaw(AccountClock),
-          color: "primary",
-          stat: {},
-        },
-      ],
       events: [],
       displays: [],
       playlists: [],
+      approvals: [],
       content: [],
       needsAttention: [],
       // placeholder rows
@@ -352,31 +335,57 @@ export default {
 
       return then.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     },
-    statPrimary(stat) {
-      const entries = Object.entries(stat);
-      return entries.length ? entries[0][1] : 0;
+    subStats(title) {
+      let statSet = [];
+      if (title === "displays") {
+        statSet = [
+          {
+            label: 'Online',
+            value: this.displays.filter((d) => d.status === 'online').length,
+            color: 'success-emphasis',
+            bgColor: 'success-subtle'
+          },
+          {
+            label: 'Offline',
+            value: this.displays.filter((d) => d.status === 'offline').length,
+            color: 'danger-emphasis',
+            bgColor: 'danger-subtle'
+
+          },
+          {
+            label: 'Disabled',
+            value: this.displays.filter((d) => d.status === 'disabled').length,
+            color: 'muted',
+            bgColor: 'body-secondary'
+
+          }
+        ];
+      } else if (title === "approvals") {
+        statSet = [
+          {
+            label: 'Approved',
+            value: this.approvals.filter((a) => a.status === 'approved').length,
+            color: 'success-emphasis',
+            bgColor: "success-subtle"
+          },
+          {
+            label: 'Pending',
+            value: this.approvals.filter((a) => a.status === 'pending').length,
+            color: 'warning-emphasis',
+            bgColor: "warning-subtle"
+          },
+          {
+            label: 'Rejected',
+            value: this.approvals.filter((a) => a.status === 'rejected').length,
+            color: 'danger-emphasis',
+            bgColor: "danger-subtle"
+          }
+        ];
+      }
+      return statSet;
     },
   },
   computed: {
-    displayStats() {
-      return [
-        {
-          label: 'Online',
-          value: this.displays.filter((d) => d.status === 'online').length,
-          color: 'success'
-        },
-        {
-          label: 'Offline',
-          value: this.displays.filter((d) => d.status === 'offline').length,
-          color: 'danger'
-        },
-        {
-          label: 'Disabled',
-          value: this.displays.filter((d) => d.status === 'disabled').length,
-          color: 'secondary'
-        }
-      ]
-    },
     employeeEvents() {
       return this.events.filter((event) => event.category === "employee");
     },
@@ -388,10 +397,13 @@ export default {
   },
   async mounted() {
     try {
+      this.loading = true;
+
       this.events = (await this.$axios.get(this.$api + "events?all=1")).data;
       this.displays = (await this.$axios.get(this.$api + "displays?all=1")).data;
       this.playlists = (await this.$axios.get(this.$api + "playlists?all=1")).data;
       this.content = (await this.$axios.get(this.$api + "content?all=1")).data;
+      this.approvals = (await this.$axios.get(this.$api + "approvals?all=1")).data;
 
       // filter content by create date desc
       this.recentUploads = this.content
@@ -402,13 +414,46 @@ export default {
         .sort((a, b) => new Date(a.start) - new Date(b.start))
         .filter((event) => new Date(event.start) >= new Date());
 
-      this.quickStats.forEach((qs) => {
-        if (qs.title === "displays") {
-          qs.stat.online = this.displays.filter((d) => d.status === "online").length;
-          qs.stat.offline = this.displays.filter((d) => d.status === "offline").length;
-          qs.stat.disabled = this.displays.filter((d) => d.status === "disabled").length;
+      this.quickStats = [
+        {
+          title: "displays",
+          icon: markRaw(Television),
+          color: "success",
+          stat: {},
+        },
+        {
+          title: "content",
+          icon: markRaw(FileDocument),
+          color: "danger",
+          stat: {},
+        },
+        {
+          title: "playlists",
+          icon: markRaw(PlaylistPlay),
+          color: "secondary",
+          stat: {},
+        },
+        {
+          title: "approvals",
+          icon: markRaw(AccountClock),
+          color: "primary",
+          stat: {},
+        }]
+
+      this.quickStats.forEach(({ title, stat: { online, offline, disabled, pending, approved, rejected } }) => {
+        if (title === "displays") {
+          online = this.displays.filter((d) => d.status === "online").length;
+          offline = this.displays.filter((d) => d.status === "offline").length;
+          disabled = this.displays.filter((d) => d.status === "disabled").length;
+        }
+        if (title === "approvals") {
+          pending = this.approvals.filter((a) => a.status === "pending").length;
+          approved = this.approvals.filter((a) => a.status === "approved").length;
+          rejected = this.approvals.filter((a) => a.status === "rejected").length;
         }
       })
+
+      this.loading = false;
     } catch {
       console.log("No events found")
     }

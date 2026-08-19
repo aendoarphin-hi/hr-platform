@@ -13,8 +13,19 @@
         </div>
       </div>
     </div>
-    <!--  calendar  -->
+    <!-- filters -->
     <div class="card p-3 mt-3">
+      <div class="hstack gap-2">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="filter-announcements" v-model="filterAnnouncements">
+          <label class="form-check-label" for="filter-announcements">
+            Filter Announcements
+          </label>
+        </div>
+      </div>
+    </div>
+    <!--  calendar  -->
+    <div id="calendar-container" class="card p-3 mt-3">
       <FullCalendar :options="calendarOptions" />
     </div>
     <!--  modals  -->
@@ -65,10 +76,10 @@ export default {
       },
       subtypeColors: {
         // employee
-        birthday: '#ebc248',
-        anniversary: '#ebc248',
-        promotion: '#ebc248',
-        "new hire": '#ebc248',
+        birthday: '#D9B84C',
+        anniversary: '#C9A83E',
+        promotion: '#E0C15A',
+        "new hire": '#BFA13A',
 
         // company
         general: '#1b75bc',
@@ -108,7 +119,7 @@ export default {
             eventMaxStack: 6
           }
         },
-        height: 800,
+        height: "100%",
         events: [],
         eventClick: (info) => {
           this.selectedEvent = info.event
@@ -151,6 +162,11 @@ export default {
       })
       // inject events
       this.calendarOptions.events = events
+
+      // if qparam filter=announcements, then filter where category is 'announcment'
+      if (this.$route.query.filter === 'announcements') {
+        this.calendarOptions.events = this.calendarOptions.events.filter(e => e.category === 'announcement')
+      }
     }
   },
   computed: {
@@ -170,3 +186,11 @@ export default {
   }
 }
 </script>
+
+<style>
+#calendar-container {
+  width: 100%;
+  height: 80dvh;
+  overflow: auto;
+}
+</style>
