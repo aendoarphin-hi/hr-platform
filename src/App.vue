@@ -11,7 +11,7 @@
   <!-- main content -->
   <div class="d-flex flex-row bg-light" style="height: 100vh; overflow: auto;"
     :class="border ? 'borderized' : ''">
-    <SidebarComponent />
+    <SidebarComponent/>
     <router-view class="container" />
   </div>
   <ToastComponent ref="toast" />

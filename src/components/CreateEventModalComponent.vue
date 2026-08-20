@@ -62,7 +62,7 @@
                 <label for="event-create-end-date" class="small fw-semibold">End</label>
                 <input type="datetime-local" class="form-control form-control-sm" id="event-create-end-date"
                   v-model="newEvent.end" />
-                <small class="text-muted">Leave blank for all-day event</small>
+                <small class="text-muted">Leave blank for 1-day event</small>
               </div>
             </div>
 
@@ -70,7 +70,7 @@
             <select id="event-create-location" class="form-select form-select-sm" v-model="newEvent.location">
               <option value="">Select Location</option>
               <option v-for="location in locations" :key="location" :value="location">
-                {{ location }}
+                {{ location || "Company-wide" }}
               </option>
             </select>
           </div>

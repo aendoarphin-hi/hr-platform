@@ -1,5 +1,5 @@
 <template>
-  <div :id="`${$route.name}-view`" class="w-100 p-3">
+  <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Navigating</h5>
@@ -143,10 +143,10 @@
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="displays && !initializing" class="table table-hover align-middle mb-0">
               <thead class="table-light sticky-top shadow-sm">
-                <tr>
+                <tr class="small text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.displays" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
-                    {{ sc.charAt(0).toUpperCase() + sc.slice(1) }}
+                    {{ columnLabel(sc) }}
                     <template v-if="sc === sortColumn">
                       <TriangleSmallUp v-if="sortColumn === sc && !desc" />
                       <TriangleSmallDown v-else />
@@ -171,9 +171,15 @@
                   </td>
                   <td class="text-end">
                     <div class="d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                      <button class="btn btn-sm btn-outline-secondary cursor-pointer"><Eye /> View</button>
-                      <button class="btn btn-sm btn-outline-secondary cursor-pointer"><Pencil /> Edit</button>
-                      <button class="btn btn-sm btn-outline-secondary cursor-pointer"><Restart /> Restart</button>
+                      <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <Eye /> View
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <Pencil /> Edit
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <Restart /> Restart
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -207,10 +213,6 @@
                 <Restart class="cursor-pointer" title="Restart" />
               </div>
             </div>
-          </div>
-
-          <div v-else-if="displays.length == 0" class="text-center text-secondary py-4">
-            No matches found. Please adjust your filters.
           </div>
         </div>
         <!-- tab view: playlists -->
@@ -256,10 +258,10 @@
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="playlists && !initializing" class="table table-hover align-middle mb-0">
               <thead class="table-light sticky-top shadow-sm">
-                <tr>
+                <tr class="small text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.playlists" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
-                    {{ sc.charAt(0).toUpperCase() + sc.slice(1) }}
+                    {{ columnLabel(sc) }}
                     <template v-if="sc === sortColumn">
                       <TriangleSmallUp v-if="sortColumn === sc && !desc" />
                       <TriangleSmallDown v-else />
@@ -277,7 +279,9 @@
                   <td>{{ d.description }}</td>
                   <td class="text-end">
                     <div class="d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                      <button class="btn btn-sm btn-outline-secondary cursor-pointer"><Pencil /> Edit</button>
+                      <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <Pencil /> Edit
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -304,10 +308,6 @@
                 <Pencil class="cursor-pointer" title="Edit" />
               </div>
             </div>
-          </div>
-
-          <div v-else-if="playlists.length == 0" class="text-center text-secondary py-4">
-            No matches found. Please adjust your filters.
           </div>
         </div>
         <!-- tab view: content -->
@@ -345,7 +345,9 @@
               </small>
               <select id="status-sort" class="form-select form-select-sm text-capitalize"
                 @change="sortList($event.target.value)" style="width: 180px">
-                <option v-for="(sc, i) in sortableColumns.content" :key="sc" :value="sc" :selected="i === 0">{{ sc.includes('_') ? sc.split('_').join(' ') : sc }}
+                <option v-for="(sc, i) in sortableColumns.content" :key="sc" :value="sc" :selected="i === 0">{{
+                  sc.includes('_')
+                    ? sc.split('_').join(' ') : sc }}
                 </option>
               </select>
 
@@ -373,17 +375,16 @@
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="content && !initializing" class="table table-hover align-middle mb-0">
               <thead class="table-light sticky-top shadow-sm">
-                <tr>
+                <tr class="small text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.content" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
-                    {{ sc.charAt(0).toUpperCase() + sc.slice(1) }}
+                    {{ columnLabel(sc) }}
                     <template v-if="sc === sortColumn">
                       <TriangleSmallUp v-if="sortColumn === sc && !desc" />
                       <TriangleSmallDown v-else />
                     </template>
                   </th>
-                  <th scope="col">Filename</th>
-                  <th class="text-end" scope="col">Actions</th>
+                  <th class="text-end" scope="col"></th>
                 </tr>
               </thead>
               <tbody>
@@ -396,14 +397,20 @@
                     {{ c.title }}
                   </td>
                   <td>
-                    <span class="badge text-capitalize" :class="contentStatusBadgeClass(c.status)">{{ c.status }}</span>
+                    <span class="badge text-capitalize my-0" :class="contentStatusBadgeClass(c.status)">{{ c.status
+                      }}</span>
                   </td>
                   <td>
-                    <span class="text-muted">{{ c.filename }}</span>
+                    <span class="text-muted text-capitalize small">{{ new Date(c.created_at).toLocaleString() }}</span>
+                  </td>
+                  <td>
+                    <span class="text-muted small">{{ c.filename }}</span>
                   </td>
                   <td class="text-end">
-                    <div class="d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                      <button class="btn btn-sm btn-outline-secondary cursor-pointer"><Pencil /> Edit</button>
+                    <div class="text-nowrap d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
+                      <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                        <Pencil /> Edit
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -460,17 +467,16 @@
               </div>
             </div>
           </div>
-
-          <div v-else-if="content.length == 0" class="text-center text-secondary py-4">
-            No matches found. Please adjust your filters.
-          </div>
         </div>
       </div>
     </div>
   </div>
+  <div v-else class="d-flex justify-content-center align-items-center">
+    <LoadingComponent message="Loading displays..." />
+  </div>
 </template>
 
-<script> // continue here: work on dashboard data integration
+<script>// continue here: work on dashboard data integration
 import Filter from "vue-material-design-icons/Filter.vue";
 import Sort from "vue-material-design-icons/Sort.vue";
 import Pencil from "vue-material-design-icons/Pencil.vue";
@@ -493,7 +499,7 @@ import UploadBox from "vue-material-design-icons/UploadBox.vue";
 import LoadingComponent from "@/components/LoadingComponent.vue";
 import HelpModalComponent from "@/components/HelpModalComponent.vue";
 
-import { filterByField, sortByField } from "@/common/helpers";
+import { filterByField, searchByText, sortByField } from "@/common/helpers";
 
 export default {
   name: "DisplayView",
@@ -546,7 +552,7 @@ export default {
       sortableColumns: {
         displays: ["name", "location", "status"],
         playlists: ["name", "description"],
-        content: ["type", "title", "status", "created_at"],
+        content: ["type", "title", "status", "created_at", "filename"],
       },
       desc: false, // sort direction
       hoverIndex: -1, // for hover effect on tab actions
@@ -570,8 +576,7 @@ export default {
       result = filterByField(result, "location", this.filters.displays.location);
       result = filterByField(result, "status", this.filters.displays.status);
       if (this.search.trim().length > 0) {
-        // parse the object values into one string and use that as the search reference (for the object)
-        result = result.filter((d) => JSON.stringify(d).toLowerCase().includes(this.search.toLowerCase()));
+        result = searchByText(result, this.search);
       }
       return sortByField(result, this.sortColumn, this.desc);
     },
@@ -581,7 +586,7 @@ export default {
       result = filterByField(result, "name", this.filters.playlists.name, "includes");
       result = filterByField(result, "description", this.filters.playlists.description, "includes");
       if (this.search.trim().length > 0) {
-        result = result.filter((d) => JSON.stringify(d).toLowerCase().includes(this.search.toLowerCase()));
+        result = searchByText(result, this.search);
       }
       return sortByField(result, this.sortColumn, this.desc);
     },
@@ -591,7 +596,7 @@ export default {
       result = filterByField(result, "type", this.filters.content.type);
       result = filterByField(result, "status", this.filters.content.status);
       if (this.search.trim().length > 0) {
-        result = result.filter((d) => JSON.stringify(d).toLowerCase().includes(this.search.toLowerCase()));
+        result = searchByText(result, this.search);
       }
       return sortByField(result, this.sortColumn, this.desc);
     },
@@ -608,6 +613,10 @@ export default {
         this.sortColumn = column;
         this.desc = false;
       }
+    },
+    columnLabel(l) {
+      // remove underscore and capitalize
+      return l.replace(/_/g, " ");
     },
     async refreshTabPane(endpoint) {
       try {
@@ -683,7 +692,6 @@ export default {
 
       this.dataReady = true;
       this.initializing = false;
-      console.log(this.stringDisplays)
     } catch (error) {
       console.log(error + " at " + this.name);
     }

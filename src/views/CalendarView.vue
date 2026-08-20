@@ -17,7 +17,7 @@
     <div class="card p-3 mt-3">
       <div class="hstack gap-2">
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="filter-announcements" v-model="filterAnnouncements">
+          <input class="form-check-input" type="checkbox" id="filter-announcements">
           <label class="form-check-label" for="filter-announcements">
             Filter Announcements
           </label>
@@ -31,6 +31,9 @@
     <!--  modals  -->
     <EditEventModalComponent :event="selectedEvent" />
     <CreateEventModalComponent />
+  </div>
+  <div v-else class="d-flex justify-content-center align-items-center">
+    <LoadingComponent message="Loading calendar..." />
   </div>
 </template>
 
@@ -50,6 +53,7 @@ import EditEventModalComponent from '@/components/EditEventModalComponent.vue'
 import CreateEventModalComponent from '@/components/CreateEventModalComponent.vue'
 import { nextTick } from 'vue'
 import { Modal } from 'bootstrap'
+import LoadingComponent from '@/components/LoadingComponent.vue'
 
 export default {
   name: 'CalendarView',
@@ -57,7 +61,8 @@ export default {
   components: {
     FullCalendar,
     EditEventModalComponent,
-    CreateEventModalComponent
+    CreateEventModalComponent,
+    LoadingComponent
   },
 
   data() {

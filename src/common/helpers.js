@@ -57,3 +57,15 @@ export function sortByField(items, column, desc = false) {
         : -1;
   });
 }
+
+/**
+ * Filters an array of objects by a search term.
+ * @param {Array} list - source array
+ * @param {string} term - search term
+ * @returns {Array} filtered array
+ */
+export function searchByText(list, term) {
+  const t = term.trim().toLowerCase();
+  if (!t) return list;
+  return list.filter((item) => JSON.stringify(item).toLowerCase().includes(t));
+}

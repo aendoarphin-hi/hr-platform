@@ -81,7 +81,7 @@
               &nbsp;▸</router-link>
           </div>
           <ul class="list-group list-group-flush">
-            <li v-for="(a, i) in upcomingAnnouncements.slice(0, 5)" :key="i"
+            <li v-for="(a, i) in upcomingAnnouncements" :key="i"
               class="list-group-item d-flex align-items-center gap-3">
               <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold text-truncate">{{ a.title }}</div>
@@ -390,9 +390,11 @@ export default {
       return this.events.filter((event) => event.category === "employee");
     },
     upcomingAnnouncements() {
+      console.log(this.events);
       return this.events
         .filter((event) => event.category === "announcement" && event.subtype !== "weather")
-        .sort((a, b) => new Date(a.start) - new Date(b.start));
+        .sort((a, b) => new Date(a.start) - new Date(b.start))
+        .slice(0, 5);
     },
   },
   async mounted() {

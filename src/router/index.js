@@ -12,7 +12,7 @@ import CalendarMonth from "vue-material-design-icons/CalendarMonth.vue";
 import Cog from "vue-material-design-icons/Cog.vue";
 import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
 import axios from "axios";
-import { globalStore } from "@/common/store.js";
+import { store } from "@/common/store.js";
 
 const publicPages = ["Auth", "Unauthorized"];
 
@@ -85,10 +85,14 @@ router.beforeEach(async (to) => {
   try {
     // redirect to login page if not logged in and trying to access a restricted page
     const authRes = await axios.get(config.api + "employees?auth"); // check if ttprod auth session is set
-    globalStore.authenticated = authRes.data;
+    store.authenticated = authRes.data;
+    // console.log("logged in");
+    // console.log(store.authenticated);
     // user not logged in
-  } catch (error) {  
+  } catch (error) {
     if (!publicPages.includes(to.name)) {
+      // console.log("not logged in");
+      // console.log(store.authenticated);
       return { name: "Auth" };
     }
   }

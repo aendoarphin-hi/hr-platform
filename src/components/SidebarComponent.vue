@@ -25,9 +25,12 @@
     <span class="w-100 text-center text-muted" style="font-size: 10px;">HAYDEN {{ this.$appname }} v{{ this.$version }}</span>
     <hr />
     <div id="sidebar-footer">
-      <router-link to="/profile" class="text-decoration-none">
+      <router-link v-if="this.$store.authenticated" to="/profile" class="text-decoration-none">
         <AccountCircle />&nbsp;&nbsp;<span>{{ this.user.name }}</span>
       </router-link>
+      <a v-else href="http://10.10.8.156" class="text-decoration-none">
+        <AccountCircle />&nbsp;&nbsp;<span>Sign In</span>
+      </a>
     </div>
   </aside>
   <div @click="sidebarOpen = !sidebarOpen" class="cursor-pointer"

@@ -50,8 +50,8 @@
           <select v-if="editing" id="event-edit-location-select" class="form-select form-select-sm"
             v-model="editLocation">
             <option value="">Select Location</option>
-            <option v-for="location in locations" :key="location" :value="location">
-              {{ location }}
+            <option v-for="l in locations" :key="l.id" :value="l.id">
+              {{ l.name || "Company-wide" }}
             </option>
           </select>
         </div>
@@ -104,7 +104,7 @@ export default {
       editing: false,
       editStart: this.event?.start ? this.formatDateTimeLocal(this.event.start) : "",
       editEnd: this.event?.end ? this.formatDateTimeLocal(this.event.end) : "",
-      editLocation: this.event?.extendedProps?.location || "",
+      editLocation: this.event?.extendedProps?.location_id || "",
       currentEvent: this.event,
       locations: [],
       changes: [], // if event was updated
@@ -125,7 +125,8 @@ export default {
     });
 
     // fetch all available locations for the location select dropdown
-    this.locations = null; // TODO: create distinct query endpoint for this
+    const res = (await this.$axios.get(this.$api + 'locations?all=1')).data;
+    this.locations = res; // TODO: create distinct query endpoint for this
   },
 
   watch: {
@@ -134,9 +135,8 @@ export default {
       this.editing = false;
       this.editStart = newEvent?.start ? this.formatDateTimeLocal(newEvent.start) : "";
       this.editEnd = newEvent?.end ? this.formatDateTimeLocal(newEvent.end) : "";
-      this.editLocation = newEvent?.extendedProps?.location || "";
+      this.editLocation = newEvent?.extendedProps?.location_id || "";
       this.changes = [];
-      console.log(this.currentEvent);
     },
   },
 
@@ -178,7 +178,7 @@ export default {
     startEditing() {
       this.editStart = this.currentEvent?.start ? this.formatDateTimeLocal(this.currentEvent.start) : "";
       this.editEnd = this.currentEvent?.end ? this.formatDateTimeLocal(this.currentEvent.end) : "";
-      this.editLocation = this.currentEvent?.extendedProps?.location || "";
+      this.editLocation = this.currentEvent?.extendedProps?.location || "Blah";
       this.editing = true;
     },
     formatLabel(value) {

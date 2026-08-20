@@ -13,7 +13,7 @@ import "animate.css";
 // app utilities
 import { debounce } from "@/common/helpers.js";
 import { config } from "@/common/config.js";
-import { globalStore } from "./common/store";
+import { store } from "./common/store";
 
 // fix for vue resize observer error
 debounce();
@@ -26,7 +26,7 @@ app.config.globalProperties = {
   $env: process.env.NODE_ENV,
   $api: config.api,
   $axios: axios,
-  $store: globalStore
+  $store: store
 }
 
 app
