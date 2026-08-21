@@ -39,17 +39,13 @@ export default {
   },
   data() {
     return {
-      border: false, // dev border
+      border: false,
       loading: false,
     };
   },
-  computed: {},
-  watch: {
-    
-  },
   async mounted() {
     this.loading = true
-    
+    // do stuff
     this.loading = false
   },
 };

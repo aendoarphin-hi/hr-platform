@@ -26,7 +26,6 @@ app.config.globalProperties = {
   $env: process.env.NODE_ENV,
   $api: config.api,
   $axios: axios,
-  $store: store
 }
 
 app

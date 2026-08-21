@@ -208,7 +208,7 @@
         No files match your search criteria
       </h5>
       <h5 class="text-muted fw-normal" v-else>No content uploaded yet</h5>
-      <p class="text-muted small">Upload signage content to get started.</p>
+      <p class="text-muted small">Upload screen content to get started.</p>
       <button class="btn btn-primary btn-sm" @click="showUploadModal = true">
         <UploadBox :size="16" class="me-1" />
         Upload Content
@@ -525,7 +525,7 @@ export default {
     },
 
     /**
-     * generates mock content items for a signage/hr system.
+     * generates mock content items for a screen/hr system.
      */
     generateMockContent(count) {
       const imageNames = [

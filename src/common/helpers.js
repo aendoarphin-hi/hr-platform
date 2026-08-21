@@ -69,3 +69,25 @@ export function searchByText(list, term) {
   if (!t) return list;
   return list.filter((item) => JSON.stringify(item).toLowerCase().includes(t));
 }
+
+/**
+ * Formats a timestamp into a human-readable string.
+ * @param {string} timestamp - timestamp string
+ * @returns {string} formatted string
+ */
+export function formatTimeAgo(timestamp) {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMins = Math.floor((now - then) / 60000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+
+  return then.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}

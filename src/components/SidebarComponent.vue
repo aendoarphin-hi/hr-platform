@@ -4,6 +4,7 @@
       <img src="@/assets/img/hayden-blue.svg" alt="Hayden Logo" class="me-2" />
       <span class="fs-4 text-dark text-nowrap"><strong>HAYDEN</strong> {{ this.$appname }}</span>
     </router-link>
+    <span class="w-100 text-center text-muted" style="font-size: 10px;">v{{ this.$version }}</span>
     <hr />
     <ul class="nav nav-pills flex-column mb-auto gap-1">
       <li v-for="route in routes" :key="route.name" class="nav-item">
@@ -22,11 +23,12 @@
         </a>
       </li>
     </ul>
-    <span class="w-100 text-center text-muted" style="font-size: 10px;">HAYDEN {{ this.$appname }} v{{ this.$version }}</span>
     <hr />
     <div id="sidebar-footer">
-      <router-link v-if="this.$store.authenticated" to="/profile" class="text-decoration-none">
-        <AccountCircle />&nbsp;&nbsp;<span>{{ this.user.name }}</span>
+      <router-link v-if="user" to="/profile" class="text-decoration-none">
+        <small class="bg-primary fw-semibold p-1 rounded-circle text-white w-50">
+          {{ (user.first[0] + user.last[0]) || user.name[0] }}
+        </small>&nbsp;&nbsp;<span>{{ user.name }}</span>
       </router-link>
       <a v-else href="http://10.10.8.156" class="text-decoration-none">
         <AccountCircle />&nbsp;&nbsp;<span>Sign In</span>
@@ -45,6 +47,7 @@ import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
 import ChevronRight from "vue-material-design-icons/ChevronRight.vue";
 import ChevronLeft from "vue-material-design-icons/ChevronLeft.vue";
 import Logout from "vue-material-design-icons/Logout.vue";
+import { store } from "@/common/store";
 
 export default {
   name: "Sidebar",
@@ -59,7 +62,6 @@ export default {
       name: "SidebarComponent",
       sidebarOpen: true,
       routes: [],
-      user: {}
     };
   },
 
@@ -67,13 +69,12 @@ export default {
     this.routes = this.$router.options.routes.filter(
       (route) => route.name && route.active
     );
+  },
 
-    try {
-      const res = await this.$axios.get(this.$api + 'employees?auth');
-      this.user = res.data;
-    } catch (error) {
-      console.log(error + " at " + this.name);
-    }
+  computed: {
+    user() {
+      return store.authenticated;
+    },
   },
 };
 </script>

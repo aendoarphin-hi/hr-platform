@@ -83,16 +83,11 @@ const router = createRouter({
 // do stuff before route change
 router.beforeEach(async (to) => {
   try {
-    // redirect to login page if not logged in and trying to access a restricted page
-    const authRes = await axios.get(config.api + "employees?auth"); // check if ttprod auth session is set
+    const authRes = await axios.get(config.api + "employees?auth");
     store.authenticated = authRes.data;
-    // console.log("logged in");
-    // console.log(store.authenticated);
-    // user not logged in
   } catch (error) {
+    store.authenticated = false;
     if (!publicPages.includes(to.name)) {
-      // console.log("not logged in");
-      // console.log(store.authenticated);
       return { name: "Auth" };
     }
   }

@@ -49,8 +49,8 @@
           <!-- location dropdown -->
           <select v-if="editing" id="event-edit-location-select" class="form-select form-select-sm"
             v-model="editLocation">
-            <option value="">Select Location</option>
-            <option v-for="l in locations" :key="l.id" :value="l.id">
+            <option value="">Select Location (Leave blank for company-wide)</option>
+            <option v-for="l in locations" :key="l.name + '-' + l.id" :value="l.name">
               {{ l.name || "Company-wide" }}
             </option>
           </select>

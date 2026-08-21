@@ -77,7 +77,8 @@
               </span>
               Upcoming Announcements
             </h6>
-            <router-link to="/calendar?filter=announcements" class="small link-primary text-decoration-none">Manage Announcements
+            <router-link to="/calendar?filter=announcements" class="small link-primary text-decoration-none">Manage
+              Announcements
               &nbsp;▸</router-link>
           </div>
           <ul class="list-group list-group-flush">
@@ -94,8 +95,9 @@
                   </span>
                 </div>
               </div>
-              <span class="badge rounded-pill text-capitalize" :class="announcementBadgeClass(a.subtype)">{{ a.subtype
-                }}</span>
+              <span class="badge rounded-pill text-capitalize" :class="announcementBadgeClass(a.subtype)">
+                {{ a.subtype }}
+              </span>
             </li>
           </ul>
         </div>
@@ -124,7 +126,7 @@
                     <div class="min-w-0">
                       <div class="fw-semibold text-truncate">{{ u.title }}</div>
                       <div class="text-muted small">{{ u.filename }} &middot; {{ new Date(u.created_at).toDateString()
-                        }}</div>
+                      }}</div>
                     </div>
                   </div>
                 </div>
@@ -150,7 +152,7 @@
         <!--  people (events)  -->
         <div class="card shadow-sm mb-4 border-0">
           <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h6 class="text-secondary card-title mb-0 d-flex align-items-center gap-2">
+            <h6 class="text-secondary card-title mb-0 d-flex align-items-center gap-2 fw-semibold">
               <span class="mb-1">
                 <CalendarStar class="fs-5" />
               </span>
@@ -188,18 +190,20 @@
             </h6>
           </div>
           <div class="timeline">
-            <template v-if="activity.length > 0">
-              <div v-for="a in activity" :key="a.id" class="timeline-item">
+            <template v-if="recentActivity.length > 0">
+              <div
+                v-for="a in recentActivity.slice(0, 5).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))"
+                :key="a.id" class="timeline-item">
                 <div class="timeline-content p-3">
                   <div class="d-flex align-items-center gap-2">
                     <span
                       class="activity-avatar rounded-circle d-flex align-items-center justify-content-center flex-shrink-0">
-                      👤
+                      {{ a.name[0] }}
                     </span>
                     <div class="flex-grow-1 min-w-0">
-                      <span class="fw-semibold">{{ a.user }}</span> — {{ a.details }}
+                      <small class="fw-semibold">{{ a.name }}</small> <small>{{ activityDescription(a) }}</small>
                     </div>
-                    <div class="text-muted small text-nowrap">{{ formatTimeAgo(a.timestamp) }}</div>
+                    <div class="text-muted small text-nowrap">{{ formatTimeAgo(a.created_at) }}</div>
                   </div>
                 </div>
               </div>
@@ -258,6 +262,8 @@ import HelpModalComponent from "@/components/HelpModalComponent.vue";
 
 import { markRaw } from "vue";
 import LoadingComponent from "@/components/LoadingComponent.vue";
+import { store } from "@/common/store";
+import { formatTimeAgo } from "@/common/helpers";
 
 export default {
   name: "DashboardView",
@@ -291,12 +297,18 @@ export default {
       playlists: [],
       approvals: [],
       content: [],
+      employees: [],
       needsAttention: [],
       // placeholder rows
       recentUploads: []
     };
   },
   methods: {
+    formatTimeAgo,
+    setValue() {
+      store.authenticated = false;
+      window.alert(store.authenticated);
+    },
     handleScroll() {
       const currentScrollY = window.scrollY;
       if (currentScrollY > this.lastScrollY) {
@@ -318,22 +330,6 @@ export default {
 
         }[status] || "visually-hidden"
       );
-    },
-    formatTimeAgo(timestamp) {
-      const now = new Date();
-      const then = new Date(timestamp);
-      const diffMins = Math.floor((now - then) / 60000);
-
-      if (diffMins < 1) return "Just now";
-      if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
-
-      const diffHours = Math.floor(diffMins / 60);
-      if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
-
-      const diffDays = Math.floor(diffHours / 24);
-      if (diffDays < 30) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
-
-      return then.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     },
     subStats(title) {
       let statSet = [];
@@ -384,13 +380,46 @@ export default {
       }
       return statSet;
     },
+    activityDescription(a) {
+      const entity = a.entity_type;
+      let desc;
+
+      switch (entity) {
+        case 'playlists':
+          desc = this.playlists.find((e) => e.id === a.entity_id)?.name;
+          break;
+        case 'displays':
+          desc = this.displays.find((e) => e.id === a.entity_id)?.name;
+          break;
+        case 'content':
+          desc = this.content.find((e) => e.id === a.entity_id)?.title;
+          break;
+        case 'approval':
+          desc = this.approvals.find((e) => e.id === a.entity_id)?.title;
+          break;
+        case 'events':
+          desc = this.events.find((e) => e.id === a.entity_id)?.title;
+          break;
+        default:
+          break;
+      }
+      return `${a.action}d ${entity}: ${desc}`;
+    },
   },
   computed: {
+    recentActivity() {
+      return this.activity.map((a) => {
+        const employee = this.employees.find((e) => e.number === a.enum);
+        return {
+          ...a,
+          name: employee ? employee.name : "Unknown",
+        };
+      });
+    },
     employeeEvents() {
-      return this.events.filter((event) => event.category === "employee");
+      return this.events.filter((event) => event.category === "employee").slice(0, 3);
     },
     upcomingAnnouncements() {
-      console.log(this.events);
       return this.events
         .filter((event) => event.category === "announcement" && event.subtype !== "weather")
         .sort((a, b) => new Date(a.start) - new Date(b.start))
@@ -406,6 +435,8 @@ export default {
       this.playlists = (await this.$axios.get(this.$api + "playlists?all=1")).data;
       this.content = (await this.$axios.get(this.$api + "content?all=1")).data;
       this.approvals = (await this.$axios.get(this.$api + "approvals?all=1")).data;
+      this.activity = (await this.$axios.get(this.$api + "activity?all=1")).data;
+      this.employees = (await this.$axios.get(this.$api + "employees?all=1")).data;
 
       // filter content by create date desc
       this.recentUploads = this.content
@@ -500,6 +531,7 @@ export default {
   height: 44px;
   font-size: 1.2rem;
   background: var(--bs-light);
+  border: 1px solid var(--bs-border-color, #dee2e6);
 }
 
 /* activity bar */

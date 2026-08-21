@@ -21,6 +21,7 @@
 </template>
 
 <script>
+import { store } from '@/common/store';
 import Lock from 'vue-material-design-icons/Lock.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 
@@ -31,8 +32,11 @@ export default {
   },
   data() {
     return {
-      authStatus: this.$store.authenticated
+      authStatus: null
     }
+  },
+  mounted() {
+    this.authStatus = store.authenticated
   },
   watch: { // if user's already authenticated, force redirect to dashboard
     authStatus: {

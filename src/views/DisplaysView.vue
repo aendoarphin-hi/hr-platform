@@ -6,7 +6,7 @@
       <p>Use the tabs to navigate between <strong>Displays, Playlists, Content</strong>.</p>
       <h5>Displays</h5>
       <p>
-        Each signage device (display) can be edited (
+        Each screen device (display) can be edited (
         <Pencil />) and assigned a playlist, which contains a set of ordered images (content) to be presented.
         Online or disabled devices can also be rebooted (
         <Restart />) or previewed (
@@ -38,7 +38,7 @@
       </p>
       <h5>Group Permissions</h5>
       <small>
-        <strong>System</strong> - All actions allowed, with additional backend configuration options for signage
+        <strong>System</strong> - All actions allowed, with additional backend configuration options for screen
         devices<br />
         <strong>HR</strong> - Manage events, displays, playlists, content, and approvals<br />
         <strong>Supervisors</strong> - Upload content and create new playlists

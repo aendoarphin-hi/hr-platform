@@ -68,9 +68,9 @@
 
             <!-- locations dropdown -->
             <select id="event-create-location" class="form-select form-select-sm" v-model="newEvent.location">
-              <option value="">Select Location</option>
-              <option v-for="location in locations" :key="location" :value="location">
-                {{ location || "Company-wide" }}
+              <option value="">Select Location (Leave blank for company-wide)</option>
+              <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.name">
+                {{ location.name || "Company-wide" }}
               </option>
             </select>
           </div>
@@ -135,15 +135,17 @@ export default {
     });
 
     try {
-      // fetch all available event locations and subtypes
-      const res = await this.$axios.get(this.$api + 'events?all=1')
-
-      this.categories = res.data.map((e) => e.category).filter((v, i, a) => a.indexOf(v) === i);
-      this.locations = res.data.map((e) => e.location).filter((v, i, a) => a.indexOf(v) === i);
-      this.subtypes = res.data.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
+      // fetch all locations
+      const l = (await this.$axios.get(this.$api + 'locations?all=1')).data;
+      this.locations = l;
+      // fetch all available event categories and subtypes
+      const e = (await this.$axios.get(this.$api + 'events?all=1')).data;
+      this.categories = e.map((e) => e.category).filter((v, i, a) => a.indexOf(v) === i);
+      this.subtypes = e.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
     } catch (e) {
       console.log(e.message);
     }
+    console.log(this.locations);
   },
 
   computed: {
