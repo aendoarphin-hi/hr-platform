@@ -23,22 +23,21 @@
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
         <div class="btn btn-sm btn-success">+ Create Announcement</div>
-        <div class="btn btn-sm btn-primary">Upload Content</div>
-        <div class="btn btn-sm btn-danger">Issue Emergency Alert</div>
+        <div class="btn btn-sm btn-primary"><UploadBox /> Upload Content</div>
+        <div class="btn btn-sm btn-danger"><ExclamationThick /> Issue Emergency Alert</div>
       </div>
     </div>
 
     <!--  KPI stat cards  -->
     <div class="row g-3 mb-4">
-      <div v-for="s in quickStats" :key="s.title" class="col-6 col-xl-3">
-        <RouterLink :to="{ name: 'Displays', query: { tab: s.title } }" class="text-decoration-none">
+        <RouterLink v-for="s in quickStats" :key="s.title" :to="{ name: 'Displays', query: { tab: s.title } }" class="col-12 col-md-6 col-lg-3 text-decoration-none">
           <div class="card shadow-sm border border-0 hstack h-100">
-            <div class="card-body hstack align-items-end">
+            <div class="card-body hstack align-items-start">
               <div class="col cursor-pointer">
-                <div class="text-muted small text-uppercase fs-5">
+                <div class="text-muted text-uppercase hstack text-fluid">
                   <component :is="s.icon" />&nbsp;&nbsp;{{ s.title }}
                 </div>
-                <div class="fs-1 fw-semibold lh-1">{{
+                <h2 class="fw-semibold lh-1">{{
                   s.title === 'displays'
                     ? displays.length
                     : s.title === 'content'
@@ -48,18 +47,17 @@
                         : s.title === 'approvals'
                           ? approvals.length
                           : 0
-                }}</div>
+                }}</h2>
               </div>
-              <div class="text-muted gap-1 small align-self-start d-flex flex-column my-auto cursor-pointer">
+              <div class="text-muted text-fluid gap-1 align-self-start d-flex flex-column my-auto cursor-pointer">
                 <div v-for="d in subStats(s.title)" :key="'stat-' + d.label"
-                  class="badge badge-pill align-items-center justify-content-end rounded d-flex text-uppercase fw-semibold small"
+                  class="badge badge-pill align-items-center justify-content-end rounded d-flex text-uppercase fw-semibold"
                   :class="`text-${d.color} bg-${d.bgColor} ${d.value === 0 ? 'd-none' : ''}`"><span class="me-auto">{{
                     d.label }}</span>&nbsp;&nbsp;&nbsp;{{ d.value }}</div>
               </div>
             </div>
           </div>
         </RouterLink>
-      </div>
     </div>
 
     <!--  main content + sidebar  -->
@@ -192,7 +190,7 @@
           <div class="timeline">
             <template v-if="recentActivity.length > 0">
               <div
-                v-for="a in recentActivity.slice(0, 5).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))"
+                v-for="a in recentActivity"
                 :key="a.id" class="timeline-item">
                 <div class="timeline-content p-3">
                   <div class="d-flex align-items-center gap-2">
@@ -257,6 +255,7 @@ import CalendarStar from "vue-material-design-icons/CalendarStar.vue";
 import HelpCircleOutline from "vue-material-design-icons/HelpCircleOutline.vue";
 import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import Calendar from "vue-material-design-icons/Calendar.vue";
+import ExclamationThick from "vue-material-design-icons/ExclamationThick.vue";
 
 import HelpModalComponent from "@/components/HelpModalComponent.vue";
 
@@ -282,6 +281,7 @@ export default {
     HelpCircleOutline,
     FileDocument,
     Calendar,
+    ExclamationThick,
 
     HelpModalComponent,
     LoadingComponent
@@ -322,7 +322,7 @@ export default {
       return (
         {
           general: "text-primary-emphasis bg-primary-subtle",
-          urgent: "text-danger emphasis bg-danger-subtle",
+          urgent: "text-danger-emphasis bg-danger-subtle",
           maintenance: "text-muted bg-body-secondary",
           production: "text-success-emphasis bg-success-subtle",
           weather: "text-warning-emphasis bg-warning-subtle",
@@ -408,13 +408,13 @@ export default {
   },
   computed: {
     recentActivity() {
-      return this.activity.map((a) => {
-        const employee = this.employees.find((e) => e.number === a.enum);
+      return this.activity.map((a) => { 
+        const employee = this.employees.find((e) => parseInt(e.number) === a.enum);
         return {
           ...a,
           name: employee ? employee.name : "Unknown",
         };
-      });
+      }).slice(0, 5).sort((a, b) => new Date(b.date) - new Date(a.date));
     },
     employeeEvents() {
       return this.events.filter((event) => event.category === "employee").slice(0, 3);
