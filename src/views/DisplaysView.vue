@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
+  <div v-if="dataReady" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Navigating</h5>
@@ -80,7 +80,7 @@
       <!-- tab views -->
       <div class="tab-content">
         <!-- tab view: displays -->
-        <div class="tab-pane fade" :class="activeTab === 'displays' ? 'show active' : ''" id="displays">
+        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'displays' ? 'show active' : ''" id="displays">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <!-- Filters -->
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -215,8 +215,9 @@
             </div>
           </div>
         </div>
+        <div v-else><LoadingComponent message="Loading displays..." /></div>
         <!-- tab view: playlists -->
-        <div class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''" id="playlists">
+        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''" id="playlists">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div class="me-auto hstack gap-2">
               <!-- sort dropdown -->
@@ -310,8 +311,9 @@
             </div>
           </div>
         </div>
+        <div v-else><LoadingComponent message="Loading playlists..." /></div>
         <!-- tab view: content -->
-        <div class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
+        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <!-- Filters -->
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -468,12 +470,11 @@
             </div>
           </div>
         </div>
+        <div v-else><LoadingComponent message="Loading content..." /></div>
       </div>
     </div>
   </div>
-  <div v-else class="d-flex justify-content-center align-items-center">
-    <LoadingComponent message="Loading displays..." />
-  </div>
+  <div v-else><LoadingComponent message="Loading displays..." /></div>
 </template>
 
 <script>// continue here: work on dashboard data integration
