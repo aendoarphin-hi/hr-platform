@@ -14,10 +14,9 @@
 
           <div class="modal-body">
             <!-- error message -->
-            <div v-if="error" class="small fade show text-danger">
+            <div v-if="error" class="mb-3 p-2 small rounded bg-danger-subtle text-danger-emphasis">
               {{ error }}
             </div>
-            <br />
             <!-- event creatable fields -->
 
             <!-- title text -->
@@ -177,18 +176,8 @@ export default {
     },
     async saveChanges() {
       try {
-        const res = await this.$axios.post("events", {
-          title: this.newEvent.title,
-          start: this.newEvent.start,
-          end: this.newEvent.end,
-          location: this.newEvent.location,
-          category: this.newEvent.category,
-          subtype: this.newEvent.subtype,
-          description: this.newEvent.description,
-          employeeId: this.newEvent.employeeId,
-          contentId: this.newEvent.contentId,
-          status: this.newEvent.status,
-        });
+        window.alert(JSON.stringify(this.newEvent, null, 2));
+        const res = await this.$axios.post("events", this.newEvent);
         window.alert(JSON.stringify(res.data, null, 2));
         Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
@@ -198,7 +187,6 @@ export default {
     },
     formatDateTimeLocal(value) {
       if (!value) return "";
-
       const date = new Date(value);
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -213,7 +201,7 @@ export default {
     newEvent: {
       handler(newVal) {
         if (newVal.start && newVal.end && new Date(newVal.start) > new Date(newVal.end)) {
-          this.newEvent.start = ''; this.newEvent.end = ''; this.error = "Start date must be before end date";
+          this.newEvent.start = ''; this.newEvent.end = ''; this.error = "Dates cannot overlap";
         }
       },
       deep: true,
