@@ -409,7 +409,7 @@ export default {
   computed: {
     recentActivity() {
       return this.activity.map((a) => { 
-        const employee = this.employees.find((e) => parseInt(e.number) === a.enum);
+        const employee = this.employees.find((e) => parseInt(e.number) === parseInt(a.enum));
         return {
           ...a,
           name: employee ? employee.name : "Unknown",

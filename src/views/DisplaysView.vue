@@ -80,7 +80,8 @@
       <!-- tab views -->
       <div class="tab-content">
         <!-- tab view: displays -->
-        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'displays' ? 'show active' : ''" id="displays">
+        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'displays' ? 'show active' : ''"
+          id="displays">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <!-- Filters -->
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -215,9 +216,12 @@
             </div>
           </div>
         </div>
-        <div v-else><LoadingComponent message="Loading displays..." /></div>
+        <div v-else>
+          <LoadingComponent message="Loading displays..." />
+        </div>
         <!-- tab view: playlists -->
-        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''" id="playlists">
+        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''"
+          id="playlists">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div class="me-auto hstack gap-2">
               <!-- sort dropdown -->
@@ -311,7 +315,9 @@
             </div>
           </div>
         </div>
-        <div v-else><LoadingComponent message="Loading playlists..." /></div>
+        <div v-else>
+          <LoadingComponent message="Loading playlists..." />
+        </div>
         <!-- tab view: content -->
         <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
@@ -400,7 +406,7 @@
                   </td>
                   <td>
                     <span class="badge text-capitalize my-0" :class="contentStatusBadgeClass(c.status)">{{ c.status
-                      }}</span>
+                    }}</span>
                   </td>
                   <td>
                     <span class="text-muted text-capitalize small">{{ new Date(c.created_at).toLocaleString() }}</span>
@@ -430,51 +436,36 @@
               <!-- will provide thumbnail but for now set it as the logo of file type -->
               <!-- <img src="https://picsum.photos/400/200" class="card-img-top" alt="Thumbnail"
                 style="height: 100px; object-fit: cover" /> -->
-              <span v-if="c.type === 'image'"
-                class="bg-success text-white justify-content-center align-items-center d-flex fs-3"
+              <span :class="getContentThumbnail(c).class" class="justify-content-center align-items-center d-flex fs-3"
                 style="height: 100px;">
-                <Image />
-              </span>
-              <span v-else-if="c.type === 'pdf'"
-                class="bg-danger text-white justify-content-center align-items-center d-flex fs-3"
-                style="height: 100px;">
-                <FilePdfBox />
-              </span>
-              <span v-else-if="c.type === 'video'"
-                class="bg-primary text-white justify-content-center align-items-center d-flex fs-3"
-                style="height: 100px;">
-                <Video />
-              </span>
-              <span v-else-if="c.type === 'other'"
-                class="bg-body-secondary text-muted justify-content-center align-items-center d-flex fs-3"
-                style="height: 100px;">
-                <FileDocument />
-              </span>
+                <transition enter-active-class="animate__animated animate__fadeIn animate__faster" leave-active-class="animate__animated animate__fadeOut animate__faster" mode="out-in">
+                <span v-if="hoverIndex === i" style="background-color: rgba(0,0,0,0.5);" class="w-100 h-100 d-flex justify-content-center">
+                  <Pencil />
+                </span>
+                <component v-else style="filter: drop-shadow(0 5px 3px rgba(0,0,0,0.5));" :is="getContentThumbnail(c).icon" />
+              
+                </transition>
+                </span>
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                   {{ c.title }}
                 </div>
-                <small class="text-muted">
-                  {{ c.filename }}
-                </small>
                 <small>
                   <span class="badge text-capitalize" :class="contentStatusBadgeClass(c.status)">{{ c.status }}</span>
                 </small>
-                <small>
-                  <span class="text-muted text-capitalize">Uploaded {{ new Date(c.created_at).toLocaleString() }}</span>
-                </small>
-              </div>
-              <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                <Pencil class="cursor-pointer" title="Edit" />
               </div>
             </div>
           </div>
         </div>
-        <div v-else><LoadingComponent message="Loading content..." /></div>
+        <div v-else>
+          <LoadingComponent message="Loading content..." />
+        </div>
       </div>
     </div>
   </div>
-  <div v-else><LoadingComponent message="Loading displays..." /></div>
+  <div v-else>
+    <LoadingComponent message="Loading displays..." />
+  </div>
 </template>
 
 <script>// continue here: work on dashboard data integration
@@ -562,6 +553,7 @@ export default {
     };
   },
   computed: {
+
     uniqueLocations() {
       // disctinct options for location filter
       return [...new Set(this.rawDisplays.map((d) => d.location))].sort();
@@ -603,6 +595,18 @@ export default {
     },
   },
   methods: {
+    getContentThumbnail(c) {
+      switch (c.type) {
+        case "image":
+          return { class: "bg-success text-white", icon: Image };
+        case "video":
+          return { class: "bg-primary text-white", icon: Video };
+        case "pdf":
+          return { class: "bg-danger text-white", icon: FilePdfBox };
+        default:
+          return { class: "bg-body-secondary text-muted", icon: FileDocument };
+      }
+    },
     getPlaylistName(pid) {
       const p = this.rawPlaylists.find((p) => p.id === pid);
       return p ? p.name : "";
