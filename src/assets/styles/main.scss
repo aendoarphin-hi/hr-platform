@@ -12,9 +12,9 @@ $nav-tabs-link-active-color: white;
 $nav-link-color: black;
 $link-color: black;
 $btn-font-weight: 500;
-$border-radius: 10px;
+$border-radius: 6px;
 $card-border-width: 0px;
-$border-radius-sm: 10px;
+$border-radius-sm: 6px;
 $table-hover-bg: rgba(0, 0, 0, 0.028);
 
 // Import Bootstrap after overrides
@@ -49,4 +49,12 @@ $table-hover-bg: rgba(0, 0, 0, 0.028);
 // animate.css infinite flashing for loading
 .animate-flash-infinite {
   animation: flash 4s infinite;
+}
+
+.text-fluid {
+  font-size: clamp(.75rem, .75vw, 1rem) !important;
+}
+
+.tab-pane * {
+  animation: fadInUp 0.4s ease both;
 }
