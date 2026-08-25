@@ -9,10 +9,13 @@
     Development Environment
   </div>
   <!-- main content -->
-  <div class="d-flex flex-row bg-light" style="height: 100vh; overflow: auto;"
-    :class="border ? 'borderized' : ''">
-    <SidebarComponent/>
-    <router-view class="container" />
+  <div class="d-flex flex-row bg-light" style="height: 100vh; overflow: auto;" :class="border ? 'borderized' : ''">
+    <SidebarComponent />
+    <router-view id="router-view" class="container" v-slot="{ Component }">
+      <transition enter-active-class="animate__animated animate__fadeIn animate__faster" mode="out-in">
+        <component :is="Component" :key="$route.path" />
+      </transition>
+    </router-view>
   </div>
   <ToastComponent ref="toast" />
 </template>
