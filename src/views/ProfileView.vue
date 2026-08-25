@@ -70,8 +70,7 @@ export default {
     };
   },
   async mounted() {
-    // if localhost is 192.168.0.76, just use static user if not at work
-    if (window.location.hostname === '192.168.0.76') {
+    if (window.location.hostname === 'localhost') {
       this.userdata = user
     } else {
       try {
