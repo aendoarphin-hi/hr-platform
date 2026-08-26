@@ -72,7 +72,7 @@
       <ul class="nav nav-tabs" id="displays-tab-list" role="tablist">
         <li v-for="endpoint in endpoints" :key="endpoint" class="nav-item" role="presentation">
           <button class="nav-link text-capitalize" :class="activeTab === endpoint ? 'active' : ''"
-            @click="activeTab = endpoint" :id="`${endpoint}-tab`" type="button" role="tab">
+            @click="activeTab = endpoint; search = ''" :id="`${endpoint}-tab`" type="button" role="tab">
             {{ endpoint }}
           </button>
         </li>
@@ -92,8 +92,8 @@
                 style="width: 180px">
                 <option value="" selected>All Locations</option>
 
-                <option v-for="location in uniqueLocations" :key="location" :value="location">
-                  {{ location }}
+                <option v-for="l in locations" :key="l.id" :value="l.name">
+                  {{ l.name }}
                 </option>
               </select>
 
@@ -114,9 +114,10 @@
               <small>
                 <Sort class="me-1" />Sort By
               </small>
-              <select id="status-sort" class="form-select form-select-sm text-capitalize"
-                @change="sortList($event.target.value)" style="width: 180px">
-                <option v-for="(sc, i) in sortableColumns.displays" :key="sc" :value="sc" :selected="i === 0">{{ sc }}
+              <select id="status-sort-displays" class="form-select form-select-sm text-capitalize"
+                :value="sortColumns.displays" @change="sortList($event.target.value)" style="width: 180px">
+
+                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }}
                 </option>
               </select>
 
@@ -148,8 +149,8 @@
                   <th v-for="(sc, i) in sortableColumns.displays" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
                     {{ columnLabel(sc) }}
-                    <template v-if="sc === sortColumn">
-                      <TriangleSmallUp v-if="sortColumn === sc && !desc" />
+                    <template v-if="sc === sortColumns.displays">
+                      <TriangleSmallUp v-if="!sortDesc.displays" />
                       <TriangleSmallDown v-else />
                     </template>
                   </th>
@@ -158,7 +159,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(d, i) in displays" :key="d" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                <tr v-for="(d, i) in displays" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                   <td class="fw-semibold"
                     style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
                     {{ d.name }}
@@ -193,20 +194,20 @@
           <div v-else-if="dataReady && viewMode === 'grid'"
             class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh;">
-            <div v-for="(d, i) in displays" :key="d" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
+            <div v-for="(d, i) in displays" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
               class="card shadow-sm border col-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                   {{ d.name }}
                 </div>
                 <small>
-                  <PlaylistPlay /> {{ getPlaylistName(d.playlist_id) }}
-                </small>
-                <small class="text-muted">
-                  <MapMarker /> {{ d.location }} <br /> {{ d.resolution }}
+                  <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
                 </small>
                 <small>
-                  <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
+                  <PlaylistPlay /> {{ getPlaylistName(d.playlist_id) }}
+                </small>
+                <small v-if="d.location" class="text-muted">
+                  <MapMarker /> {{ d.location }}
                 </small>
               </div>
               <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
@@ -228,9 +229,10 @@
               <small>
                 <Sort class="me-1" />Sort By
               </small>
-              <select id="status-sort" class="text-capitalize form-select form-select-sm"
-                @change="sortList($event.target.value)" style="width: 180px">
-                <option v-for="(sc, i) in sortableColumns.playlists" :key="sc" :value="sc" :selected="i === 0">{{ sc }}
+              <select id="status-sort-playlists" class="form-select form-select-sm text-capitalize"
+                :value="sortColumns.playlists" @change="sortList($event.target.value)" style="width: 180px">
+
+                <option v-for="sc in sortableColumns.playlists" :key="sc" :value="sc">{{ sc }}
                 </option>
               </select>
             </div>
@@ -267,8 +269,8 @@
                   <th v-for="(sc, i) in sortableColumns.playlists" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
                     {{ columnLabel(sc) }}
-                    <template v-if="sc === sortColumn">
-                      <TriangleSmallUp v-if="sortColumn === sc && !desc" />
+                    <template v-if="sc === sortColumns.playlists">
+                      <TriangleSmallUp v-if="!sortDesc.playlists" />
                       <TriangleSmallDown v-else />
                     </template>
                   </th>
@@ -276,7 +278,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(d, i) in playlists" :key="d" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                <tr v-for="(d, i) in playlists" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                   <td class="fw-semibold"
                     style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
                     {{ d.name }}
@@ -299,7 +301,7 @@
           <div v-else-if="dataReady && viewMode === 'grid'"
             class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
-            <div v-for="(d, i) in playlists" :key="d" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
+            <div v-for="(d, i) in playlists" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
               class="card shadow-sm border col-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
@@ -351,9 +353,10 @@
               <small>
                 <Sort class="me-1" />Sort By
               </small>
-              <select id="status-sort" class="form-select form-select-sm text-capitalize"
-                @change="sortList($event.target.value)" style="width: 180px">
-                <option v-for="(sc, i) in sortableColumns.content" :key="sc" :value="sc" :selected="i === 0">{{
+              <select id="status-sort-content" class="form-select form-select-sm text-capitalize"
+                :value="sortColumns.content" @change="sortList($event.target.value)" style="width: 180px">
+
+                <option v-for="sc in sortableColumns.content" :key="sc" :value="sc">{{
                   sc.includes('_')
                     ? sc.split('_').join(' ') : sc }}
                 </option>
@@ -387,8 +390,8 @@
                   <th v-for="(sc, i) in sortableColumns.content" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
                     {{ columnLabel(sc) }}
-                    <template v-if="sc === sortColumn">
-                      <TriangleSmallUp v-if="sortColumn === sc && !desc" />
+                    <template v-if="sc === sortColumns.content">
+                      <TriangleSmallUp v-if="!sortDesc.content" />
                       <TriangleSmallDown v-else />
                     </template>
                   </th>
@@ -396,7 +399,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(c, i) in content" :key="c" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                <tr v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                   <td>
                     <span class="badge" :class="contentTypeBadgeClass(c.type)">{{ c.type }}</span>
                   </td>
@@ -431,21 +434,20 @@
           <div v-else-if="dataReady && viewMode === 'grid'"
             class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
-            <div v-for="(c, i) in content" :key="c" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
+            <div v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
               class="card shadow-sm border col-2 overflow-hidden">
               <!-- will provide thumbnail but for now set it as the logo of file type -->
               <!-- <img src="https://picsum.photos/400/200" class="card-img-top" alt="Thumbnail"
                 style="height: 100px; object-fit: cover" /> -->
               <span :class="getContentThumbnail(c).class" class="justify-content-center align-items-center d-flex fs-3"
                 style="height: 100px;">
-                <transition enter-active-class="animate__animated animate__fadeIn animate__faster" leave-active-class="animate__animated animate__fadeOut animate__faster" mode="out-in">
-                <span v-if="hoverIndex === i" style="background-color: rgba(0,0,0,0.5);" class="w-100 h-100 d-flex justify-content-center">
+                <span v-if="hoverIndex === i" style="background-color: rgba(0,0,0,0.5);"
+                  class="w-100 h-100 d-flex justify-content-center fs-5">
                   <Pencil />
                 </span>
-                <component v-else style="filter: drop-shadow(0 5px 3px rgba(0,0,0,0.5));" :is="getContentThumbnail(c).icon" />
-              
-                </transition>
-                </span>
+                <component v-else style="filter: drop-shadow(0 5px 3px rgba(0,0,0,0.5));"
+                  :is="getContentThumbnail(c).icon" />
+              </span>
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                   {{ c.title }}
@@ -468,7 +470,7 @@
   </div>
 </template>
 
-<script>// continue here: work on dashboard data integration
+<script>
 import Filter from "vue-material-design-icons/Filter.vue";
 import Sort from "vue-material-design-icons/Sort.vue";
 import Pencil from "vue-material-design-icons/Pencil.vue";
@@ -521,10 +523,11 @@ export default {
   data() {
     return {
       initializing: true, // loading state
-      endpoints: ["displays", "playlists", "content"], // tabs/api endpoints
+      endpoints: ["displays", "playlists", "content"],
       rawDisplays: [],
       rawPlaylists: [],
       rawContent: [],
+      locations: [],
       dataReady: false,
       search: "",
       filters: {
@@ -532,56 +535,59 @@ export default {
           location: "",
           status: "",
         },
-        playlists: {
-          name: "",
-        },
         content: {
           type: "",
           status: "",
         },
       },
-      sortColumn: "name",
+      sortColumns: {
+        displays: "name",
+        playlists: "name",
+        content: "type",
+      },
       sortableColumns: {
         displays: ["name", "location", "status"],
         playlists: ["name", "description"],
         content: ["type", "title", "status", "created_at", "filename"],
       },
-      desc: false, // sort direction
+      sortDesc: {
+        displays: false,
+        playlists: false,
+        content: false,
+      },
       hoverIndex: -1, // for hover effect on tab actions
       viewMode: "grid", // grid or list
       activeTab: "displays", // active tab
     };
   },
   computed: {
-
-    uniqueLocations() {
-      // disctinct options for location filter
-      return [...new Set(this.rawDisplays.map((d) => d.location))].sort();
-    },
-
     uniqueContentTypes() {
       // distinct options for content type filter
       return [...new Set(this.rawContent.map((c) => c.type))].sort();
     },
 
     displays() {
-      let result = [...this.rawDisplays];
+      const locationNameById = Object.fromEntries(
+        this.locations.map((l) => [l.id, l.name])
+      );
+      let result = this.rawDisplays.map((d) => ({
+        ...d,
+        location: locationNameById[d.location_id] ?? "",
+      }));
       result = filterByField(result, "location", this.filters.displays.location);
       result = filterByField(result, "status", this.filters.displays.status);
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
       }
-      return sortByField(result, this.sortColumn, this.desc);
+      return sortByField(result, this.sortColumns.displays, this.sortDesc.displays);
     },
 
     playlists() {
       let result = [...this.rawPlaylists];
-      result = filterByField(result, "name", this.filters.playlists.name, "includes");
-      result = filterByField(result, "description", this.filters.playlists.description, "includes");
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
       }
-      return sortByField(result, this.sortColumn, this.desc);
+      return sortByField(result, this.sortColumns.playlists, this.sortDesc.playlists);
     },
 
     content() {
@@ -591,7 +597,7 @@ export default {
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
       }
-      return sortByField(result, this.sortColumn, this.desc);
+      return sortByField(result, this.sortColumns.content, this.sortDesc.content);
     },
   },
   methods: {
@@ -612,38 +618,44 @@ export default {
       return p ? p.name : "";
     },
     sortList(column) {
-      if (this.sortColumn === column) {
-        this.desc = !this.desc;
+      const tab = this.activeTab;
+      if (this.sortColumns[tab] === column) {
+        this.sortDesc[tab] = !this.sortDesc[tab];
       } else {
-        this.sortColumn = column;
-        this.desc = false;
+        this.sortColumns[tab] = column;
+        this.sortDesc[tab] = false;
       }
     },
+
     columnLabel(l) {
       // remove underscore and capitalize
       return l.replace(/_/g, " ");
     },
-    async refreshTabPane(endpoint) {
-      try {
-        // refetch data of current tab view
-        this.initializing = true;
-        const res = await this.$axios.get(this.$api + endpoint + "?all=1");
-        switch (endpoint) {
-          case "displays":
-            this.rawDisplays = res.data;
-            break;
-          case "playlists":
-            this.rawPlaylists = res.data;
-            break;
-          case "content":
-            this.rawContent = res.data;
-            break;
-        }
-        this.initializing = false;
-      } catch (error) {
-        console.log(error + " at " + this.name);
+    async fetchEndpoint(endpoint) {
+      const res = await this.$axios.get(this.$api + endpoint + "?all=1");
+      switch (endpoint) {
+        case "displays":
+          this.rawDisplays = res.data;
+          break;
+        case "playlists":
+          this.rawPlaylists = res.data;
+          break;
+        case "content":
+          this.rawContent = res.data;
+          break;
       }
     },
+    async refreshTabPane(endpoint) {
+      this.initializing = true;
+      try {
+        await this.fetchEndpoint(endpoint);
+      } catch (error) {
+        console.log(error + " at " + this.name);
+      } finally {
+        this.initializing = false;
+      }
+    },
+
     statusBadgeClass(status) {
       const map = {
         online: "bg-success-subtle text-success-emphasis",
@@ -680,20 +692,10 @@ export default {
         this.activeTab = tab;
       }
 
-      this.endpoints.forEach(async (endpoint) => {
-        const res = await this.$axios.get(this.$api + endpoint + "?all=1");
-        switch (endpoint) {
-          case "displays":
-            this.rawDisplays = res.data;
-            break;
-          case "playlists":
-            this.rawPlaylists = res.data;
-            break;
-          case "content":
-            this.rawContent = res.data;
-            break;
-        }
-      })
+      // get all locations
+      this.locations = (await this.$axios.get(this.$api + "locations?all=1")).data;
+
+      await Promise.all(this.endpoints.map((endpoint) => this.fetchEndpoint(endpoint)));
 
       this.dataReady = true;
       this.initializing = false;
