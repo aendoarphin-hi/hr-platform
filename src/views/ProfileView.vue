@@ -55,13 +55,11 @@
 
 <script>
 import { user } from '@/common/static';
-import LoadingComponent from '@/components/LoadingComponent.vue';
 import AccountCircle from 'vue-material-design-icons/AccountCircle.vue';
 
 export default {
   name: 'ProfileView',
   components: {
-    LoadingComponent,
     AccountCircle
   },
   data() {

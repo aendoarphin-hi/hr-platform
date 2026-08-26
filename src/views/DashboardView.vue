@@ -22,9 +22,9 @@
       </div>
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
-        <div class="btn btn-sm btn-success">+ Create Announcement</div>
-        <div class="btn btn-sm btn-primary"><UploadBox /> Upload Content</div>
-        <div class="btn btn-sm btn-danger"><ExclamationThick /> Issue Emergency Alert</div>
+        <button class="btn btn-sm btn-success" @click="open">+ Create Announcement</button>
+        <button class="btn btn-sm btn-primary" @click="openUploadModal"><UploadBox /> Upload Content</button>
+        <button class="btn btn-sm btn-danger" @click="open"><ExclamationThick /> Issue Emergency Alert</button> <!-- not same as events; do something that is immediate -->
       </div>
     </div>
 
@@ -257,10 +257,7 @@ import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import Calendar from "vue-material-design-icons/Calendar.vue";
 import ExclamationThick from "vue-material-design-icons/ExclamationThick.vue";
 
-import HelpModalComponent from "@/components/HelpModalComponent.vue";
-
 import { markRaw } from "vue";
-import LoadingComponent from "@/components/LoadingComponent.vue";
 import { store } from "@/common/store";
 import { formatTimeAgo } from "@/common/helpers";
 
@@ -282,9 +279,6 @@ export default {
     FileDocument,
     Calendar,
     ExclamationThick,
-
-    HelpModalComponent,
-    LoadingComponent
   },
 
   data() {

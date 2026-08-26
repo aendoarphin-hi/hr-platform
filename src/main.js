@@ -10,10 +10,13 @@ import "vue-material-design-icons/styles.css";
 import "./assets/styles/main.scss";
 import "animate.css";
 
+// common components
+import LoadingComponent from "@/components/LoadingComponent.vue";
+import HelpModalComponent from "@/components/HelpModalComponent.vue";
+
 // app utilities
 import { debounce } from "@/common/helpers.js";
 import { config } from "@/common/config.js";
-import { store } from "./common/store";
 
 // fix for vue resize observer error
 debounce();
@@ -29,5 +32,7 @@ app.config.globalProperties = {
 }
 
 app
+  .component("LoadingComponent", LoadingComponent)
+  .component("HelpModalComponent", HelpModalComponent)
   .use(router)
   .mount("#app");

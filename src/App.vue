@@ -29,7 +29,7 @@ export default {
   components: {
     SidebarComponent,
     AuthView,
-    ToastComponent
+    ToastComponent,
   },
   provide() {
     return {

@@ -9,7 +9,7 @@ import DashboardView from "../views/DashboardView.vue";
 import ViewDashboard from "vue-material-design-icons/ViewDashboard.vue";
 import Television from "vue-material-design-icons/Television.vue";
 import CalendarMonth from "vue-material-design-icons/CalendarMonth.vue";
-import Cog from "vue-material-design-icons/Cog.vue";
+import AccountClock from "vue-material-design-icons/AccountClock.vue";
 import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
 import axios from "axios";
 import { store } from "@/common/store.js";
@@ -44,11 +44,11 @@ const routes = [
     icon: markRaw(CalendarMonth),
   },
   {
-    path: "/settings",
-    name: "Settings",
-    component: () => import("../views/SettingsView.vue"),
+    path: "/approvals",
+    name: "Approvals",
+    component: () => import("../views/Approvals.vue"),
     active: true,
-    icon: markRaw(Cog),
+    icon: markRaw(AccountClock),
   },
   {
     path: "/profile",

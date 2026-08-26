@@ -79,8 +79,8 @@
       </ul>
       <!-- tab views -->
       <div class="tab-content">
-        <!-- tab view: displays -->
-        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'displays' ? 'show active' : ''"
+        <!-- =======================  DISPLAYS TAB VIEW   =============================== -->
+        <div v-if="dataReady" class="tab-pane fade show" :class="activeTab === 'displays' ? 'show active' : ''"
           id="displays">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <!-- Filters -->
@@ -117,7 +117,9 @@
               <select id="status-sort-displays" class="form-select form-select-sm text-capitalize"
                 :value="sortColumns.displays" @change="sortList($event.target.value)" style="width: 180px">
 
-                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }}
+                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Asc
+                </option>
+                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Desc
                 </option>
               </select>
 
@@ -133,14 +135,12 @@
                 </button>
               </div>
 
-              <button :disabled="initializing" class="btn btn-sm border-0" title="Refresh"
+              <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
                 @click="() => refreshTabPane('displays')">
                 <Refresh />
               </button>
             </div>
           </div>
-          <!-- displays -->
-
           <!-- list view -->
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="displays && !initializing" class="table table-hover align-middle mb-0">
@@ -189,7 +189,6 @@
             </table>
             <LoadingComponent v-else message="Loading displays..." />
           </div>
-
           <!-- grid view -->
           <div v-else-if="dataReady && viewMode === 'grid'"
             class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
@@ -198,7 +197,7 @@
               class="card shadow-sm border col-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
-                  {{ d.name }}
+                  <Television /> {{ d.name }}
                 </div>
                 <small>
                   <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
@@ -211,7 +210,7 @@
                 </small>
               </div>
               <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                <Pencil class="cursor-pointer" title="Edit" />
+                <Pencil class="cursor-pointer" title="Edit" data-bs-toggle="tooltip" />
                 <Restart class="cursor-pointer" title="Restart" />
               </div>
             </div>
@@ -220,7 +219,7 @@
         <div v-else>
           <LoadingComponent message="Loading displays..." />
         </div>
-        <!-- tab view: playlists -->
+        <!-- =======================  PLAYLIST TAB VIEW   =============================== -->
         <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''"
           id="playlists">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
@@ -232,7 +231,9 @@
               <select id="status-sort-playlists" class="form-select form-select-sm text-capitalize"
                 :value="sortColumns.playlists" @change="sortList($event.target.value)" style="width: 180px">
 
-                <option v-for="sc in sortableColumns.playlists" :key="sc" :value="sc">{{ sc }}
+                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Asc
+                </option>
+                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Desc
                 </option>
               </select>
             </div>
@@ -253,14 +254,12 @@
                 </button>
               </div>
 
-              <button :disabled="initializing" class="btn btn-sm border-0 ms-2" title="Refresh"
+              <button :disabled="initializing" class="btn btn-outline-secondary btn-sm ms-2" title="Refresh"
                 @click="() => refreshTabPane('playlists')">
                 <Refresh />
               </button>
             </div>
           </div>
-          <!-- playlists -->
-
           <!-- list view -->
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="playlists && !initializing" class="table table-hover align-middle mb-0">
@@ -278,12 +277,12 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(d, i) in playlists" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                <tr v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                   <td class="fw-semibold"
                     style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
-                    {{ d.name }}
+                    {{ p.name }}
                   </td>
-                  <td>{{ d.description }}</td>
+                  <td>{{ p.description }}</td>
                   <td class="text-end">
                     <div class="d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
                       <button class="btn btn-sm btn-outline-secondary cursor-pointer">
@@ -301,14 +300,14 @@
           <div v-else-if="dataReady && viewMode === 'grid'"
             class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
-            <div v-for="(d, i) in playlists" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
+            <div v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
               class="card shadow-sm border col-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
-                  {{ d.name }}
+                  <PlaylistPlay /> {{ p.name }}
                 </div>
                 <small class="text-muted">
-                  {{ d.description }}
+                  {{ p.description }}
                 </small>
               </div>
               <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
@@ -320,7 +319,7 @@
         <div v-else>
           <LoadingComponent message="Loading playlists..." />
         </div>
-        <!-- tab view: content -->
+        <!-- =======================  CONTENT TAB VIEW   =============================== -->
         <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <!-- Filters -->
@@ -358,7 +357,11 @@
 
                 <option v-for="sc in sortableColumns.content" :key="sc" :value="sc">{{
                   sc.includes('_')
-                    ? sc.split('_').join(' ') : sc }}
+                    ? sc.split('_').join(' ') : sc }} - Asc
+                </option>
+                <option v-for="sc in sortableColumns.content" :key="sc" :value="sc">{{
+                  sc.includes('_')
+                    ? sc.split('_').join(' ') : sc }} - Desc
                 </option>
               </select>
 
@@ -374,9 +377,12 @@
                 </button>
               </div>
 
-              <button :disabled="initializing" class="btn btn-sm border-0" title="Refresh"
+              <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
                 @click="() => refreshTabPane('content')">
                 <Refresh />
+              </button>
+              <button @click="filters.content = {}" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+                <FilterOffOutline />
               </button>
             </div>
           </div>
@@ -489,9 +495,8 @@ import FilePdfBox from "vue-material-design-icons/FilePdfBox.vue";
 import Video from "vue-material-design-icons/Video.vue";
 import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import UploadBox from "vue-material-design-icons/UploadBox.vue";
-
-import LoadingComponent from "@/components/LoadingComponent.vue";
-import HelpModalComponent from "@/components/HelpModalComponent.vue";
+import Television from "vue-material-design-icons/Television.vue";
+import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 
 import { filterByField, searchByText, sortByField } from "@/common/helpers";
 
@@ -516,9 +521,8 @@ export default {
     Video,
     FileDocument,
     UploadBox,
-
-    LoadingComponent,
-    HelpModalComponent,
+    Television,
+    FilterOffOutline,
   },
   data() {
     return {

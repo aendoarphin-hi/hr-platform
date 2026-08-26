@@ -362,7 +362,6 @@ import CloseCircleOutline from "vue-material-design-icons/CloseCircleOutline.vue
 import Close from "vue-material-design-icons/Close.vue";
 import FilePowerpoint from "vue-material-design-icons/FilePowerpoint.vue";
 /* ==================== components ======================= */
-import LoadingComponent from "@/components/LoadingComponent.vue";
 
 export default {
   name: "ContentView",
@@ -382,8 +381,6 @@ export default {
     CloseCircleOutline,
     Close,
     FilePowerpoint,
-
-    LoadingComponent
   },
 
   data() {

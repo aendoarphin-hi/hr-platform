@@ -1,10 +1,35 @@
 <template>
   <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
+    <!-- help modal -->
+    <HelpModalComponent>
+      <p>Events dictate how long a scheduled display will last on a screen. Use the calendar to manage events.</p>
+      <h5>Types of Events</h5>
+      <p>Below is a table of event categories and subtypes to choose from.</p>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light sticky-top shadow-sm">
+            <tr class="small text-uppercase">
+              <th scope="col">Types</th>
+              <th scope="col">Subtypes</th>
+            </tr>
+          </thead>
+          <tbody class="table-group-divider text-capitalize">
+            <tr v-for="c in categories" :key="c">
+              <td>{{ c }}</td>
+              <td>{{ subtypes.filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.category === c)).join(', ') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </HelpModalComponent>
     <!--  header + toolbar  -->
     <div class="hstack align-items-center flex-wrap position-sticky">
       <!-- header -->
-      <div class="fs-5 fw-semibold text-capitalize">
-        {{ $route.name }}
+      <div class="fs-5 fw-semibold text-capitalize d-flex align-items-center gap-2">
+        <span>{{ $route.name }}</span>
+        <span>
+          <HelpCircleOutline data-bs-toggle="modal" data-bs-target="#help-modal" title="Help" class="cursor-pointer" />
+        </span>
       </div>
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
@@ -53,7 +78,7 @@ import EditEventModalComponent from '@/components/EditEventModalComponent.vue'
 import CreateEventModalComponent from '@/components/CreateEventModalComponent.vue'
 import { nextTick } from 'vue'
 import { Modal } from 'bootstrap'
-import LoadingComponent from '@/components/LoadingComponent.vue'
+import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 
 export default {
   name: 'CalendarView',
@@ -62,7 +87,8 @@ export default {
     FullCalendar,
     EditEventModalComponent,
     CreateEventModalComponent,
-    LoadingComponent
+
+    HelpCircleOutline
   },
 
   data() {
@@ -175,7 +201,14 @@ export default {
     }
   },
   computed: {
-
+    // get all posible categories
+    categories() {
+      return this.calendarOptions.events.map((e) => e.category).filter((v, i, a) => a.indexOf(v) === i);
+    },
+    // get all posible subtypes
+    subtypes() {
+      return this.calendarOptions.events.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
+    }
   },
   async mounted() {
     try {

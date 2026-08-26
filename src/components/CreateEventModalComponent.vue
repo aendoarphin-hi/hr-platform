@@ -2,7 +2,7 @@
   <!-- modal -->
   <form @submit.prevent="saveChanges">
     <div class="modal fade" id="create-event-modal" ref="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog modal-dialog-centered" style="max-width: 500px">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
         <div class="modal-content shadow">
           <div class="modal-header">
             <div class="d-flex align-items-center w-100">
@@ -12,7 +12,13 @@
             </div>
           </div>
 
+          <!-- help description -->
+
           <div class="modal-body">
+            <p class="small text-muted">
+              Create a new event by filling in the details below.
+            </p>
+
             <!-- error message -->
             <div v-if="error" class="mb-3 p-2 small rounded bg-danger-subtle text-danger-emphasis">
               {{ error }}
@@ -46,22 +52,27 @@
 
             <!-- description text -->
             <div class="mb-3">
-              <textarea class="form-control form-control-sm" id="event-create-description"
+              <textarea id="event-create-description" class="form-control form-control-sm"
+                style="min-height: 100px; resize: none;"
                 v-model="newEvent.description" placeholder="Event Description"></textarea>
             </div>
+
+            <!-- help description -->
+            <p class="small text-muted">
+              Select a date range for the event. Content tied to this event will be visible within this date range.
+            </p>
 
             <!-- date range -->
             <div class="mb-3 d-flex flex-row flex-wrap gap-2 w-100">
               <div class="col">
-                <label for="event-create-start-date" class="small fw-semibold">Start</label>
+                <label for="event-create-start-date" class="small">Start</label>
                 <input required type="datetime-local" class="form-control form-control-sm" id="event-create-start-date"
                   v-model="newEvent.start" />
               </div>
               <div class="col">
-                <label for="event-create-end-date" class="small fw-semibold">End</label>
+                <label for="event-create-end-date" class="small">End</label>
                 <input type="datetime-local" class="form-control form-control-sm" id="event-create-end-date"
                   v-model="newEvent.end" />
-                <small class="text-muted">Leave blank for 1-day event</small>
               </div>
             </div>
 
