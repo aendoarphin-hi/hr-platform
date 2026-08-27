@@ -24,6 +24,7 @@
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import AuthView from "@/views/AuthView.vue";
 import ToastComponent from "@/components/ToastComponent.vue";
+import { store } from "./common/store";
 
 export default {
   components: {
@@ -48,7 +49,14 @@ export default {
   },
   async mounted() {
     this.loading = true
-    // do stuff
+    // init global
+    store.events = (await this.$axios.get(this.$api + "events?all=1")).data
+    store.screens = (await this.$axios.get(this.$api + "screens?all=1")).data
+    store.playlists = (await this.$axios.get(this.$api + "playlists?all=1")).data
+    store.content = (await this.$axios.get(this.$api + "content?all=1")).data
+    store.approvals = (await this.$axios.get(this.$api + "approvals?all=1")).data
+    store.activity = (await this.$axios.get(this.$api + "activity?all=1")).data
+    store.employees = (await this.$axios.get(this.$api + "employees?all=1")).data
     this.loading = false
   },
 };

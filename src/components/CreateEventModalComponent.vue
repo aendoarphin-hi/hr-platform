@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <form @submit.prevent="saveChanges">
+  <form @submit.prevent="createEvent">
     <div class="modal fade" id="create-event-modal" ref="modal" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
         <div class="modal-content shadow">
@@ -31,21 +31,31 @@
                 id="event-create-title" v-model="newEvent.title" />
             </div>
 
-            <!-- category + subtype dropdown-->
+            <!-- type + subtype dropdown-->
             <div class="mb-3 d-flex flex-row gap-2 w-100">
-              <select required id="event-create-category" class="form-select form-select-sm text-capitalize"
-                v-model="newEvent.category">
-                <option value="">Select Category</option>
-                <option class="text-capitalize" v-for="c in categories" :key="c" :value="c">
-                  {{ c }}
+              <select required id="event-create-type" class="form-select form-select-sm text-capitalize"
+                v-model="newEvent.type">
+                <option value="">Select Type</option>
+                <option class="text-capitalize" v-for="t in types" :key="t" :value="t">
+                  {{ t }}
                 </option>
               </select>
 
-              <select required id="event-create-subtype" :disabled="this.newEvent.category.length === 0"
+              <select required id="event-create-subtype" :disabled="this.newEvent.type.length === 0"
                 class="form-select form-select-sm text-capitalize" v-model="newEvent.subtype">
                 <option value="">Select Subtype</option>
                 <option class="text-capitalize" v-for="s in filteredSubtypes" :key="s" :value="s">
                   {{ s }}
+                </option>
+              </select>
+            </div>
+
+            <!-- employee selection if type is employee -->
+            <div class="mb-3">
+              <select :disabled="newEvent.type !== 'employee'" required id="event-create-employee" class="form-select form-select-sm" v-model="newEvent.employeeId">
+                <option value="">Select Employee</option>
+                <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                  {{ employee.name }}
                 </option>
               </select>
             </div>
@@ -102,7 +112,7 @@
 </template>
 
 <script>
-import { eventCategorySubtypeMap } from "@/common/config";
+import { eventTypeMap } from "@/common/constants";
 import { Modal } from "bootstrap";
 
 export default {
@@ -116,7 +126,7 @@ export default {
     return {
       newEvent: {
         title: "",
-        category: "",
+        type: "",
         subtype: "",
         description: "", // optional
         location: "", // optional
@@ -127,8 +137,9 @@ export default {
         end: "",
       },
       locations: [],
-      categories: [],
+      types: [],
       subtypes: [],
+      employees: [],
       error: ""
     };
   },
@@ -148,9 +159,9 @@ export default {
       // fetch all locations
       const l = (await this.$axios.get(this.$api + 'locations?all=1')).data;
       this.locations = l;
-      // fetch all available event categories and subtypes
+      // fetch all available event types and subtypes
       const e = (await this.$axios.get(this.$api + 'events?all=1')).data;
-      this.categories = e.map((e) => e.category).filter((v, i, a) => a.indexOf(v) === i);
+      this.types = e.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
       this.subtypes = e.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
     } catch (e) {
       console.log(e.message);
@@ -160,11 +171,11 @@ export default {
 
   computed: {
     canSave() {
-      return Boolean(this.newEvent.start && this.newEvent.title && this.newEvent.category && this.newEvent.subtype);
+      return Boolean(this.newEvent.start && this.newEvent.title && this.newEvent.type && this.newEvent.subtype);
     },
-    filteredSubtypes() {
-      if (this.newEvent.category && eventCategorySubtypeMap[this.newEvent.category]) {
-        return this.subtypes.filter((s) => eventCategorySubtypeMap[this.newEvent.category].includes(s));
+    filteredSubtypes() { // enable subtype when type is selected
+      if (this.newEvent.type && eventTypeMap[this.newEvent.type]) {
+        return this.subtypes.filter((s) => eventTypeMap[this.newEvent.type].includes(s));
       }
       return this.subtypes;
     },
@@ -174,7 +185,7 @@ export default {
     cancelChanges() {
       this.newEvent = {
         title: "",
-        category: "",
+        type: "",
         subtype: "",
         description: "", // optional
         location: "", // optional
@@ -185,16 +196,16 @@ export default {
         end: "",
       };
     },
-    async saveChanges() {
-      try {
-        window.alert(JSON.stringify(this.newEvent, null, 2));
-        const res = await this.$axios.post("events", this.newEvent);
-        window.alert(JSON.stringify(res.data, null, 2));
-        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
-        this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
-      } catch (error) {
-        this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");
-      }
+    async createEvent() {
+      window.alert(JSON.stringify(this.newEvent, null, 2));
+      // try {
+      //   // post to php backend
+      //   const res = await this.$axios.post("events", this.newEvent);
+      //   Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
+      //   this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
+      // } catch (error) {
+      //   this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");
+      // }
     },
     formatDateTimeLocal(value) {
       if (!value) return "";

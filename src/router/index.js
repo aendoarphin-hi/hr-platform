@@ -30,9 +30,9 @@ const routes = [
     icon: markRaw(ViewDashboard),
   },
   {
-    path: "/displays",
-    name: "Displays",
-    component: () => import("../views/DisplaysView.vue"),
+    path: "/screens",
+    name: "Screens",
+    component: () => import("../views/ScreensView.vue"),
     active: true,
     icon: markRaw(Television),
   },

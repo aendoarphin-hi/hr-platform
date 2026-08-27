@@ -1,6 +1,6 @@
 <template>
   <div>
-    editing display
+    editing screen
   </div>
 </template>
 

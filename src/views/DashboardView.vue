@@ -4,7 +4,7 @@
     <HelpModalComponent>
       <h5><strong>HAYDEN</strong> {{ this.$appname }}</h5>
       <p>
-        In the dashboard, you can view a summary of recent changes to events and track the status of displays. Each
+        In the dashboard, you can view a summary of recent changes to events and track the status of screens. Each
         section also contains direct links to
         a destination.
         Use the toolbar on the top right to create new announcements, upload content, or issue an emergency alert.
@@ -30,7 +30,7 @@
 
     <!--  KPI stat cards  -->
     <div class="row g-3 mb-4">
-        <RouterLink v-for="s in quickStats" :key="s.title" :to="{ name: 'Displays', query: { tab: s.title } }" class="col-12 col-md-6 col-lg-3 text-decoration-none">
+        <RouterLink v-for="s in quickStats" :key="s.title" :to="{ name: 'Screens', query: { tab: s.title } }" class="col-12 col-md-6 col-lg-3 text-decoration-none">
           <div class="card shadow-sm border border-0 hstack h-100">
             <div class="card-body hstack align-items-start">
               <div class="col cursor-pointer">
@@ -38,8 +38,8 @@
                   <component :is="s.icon" />&nbsp;&nbsp;{{ s.title }}
                 </div>
                 <h2 class="fw-semibold lh-1">{{
-                  s.title === 'displays'
-                    ? displays.length
+                  s.title === 'screens'
+                    ? screens.length
                     : s.title === 'content'
                       ? content.length
                       : s.title === 'playlists'
@@ -109,7 +109,7 @@
               </span>
               Recent Uploads
             </h6>
-            <router-link :to="{ name: 'Displays', query: { tab: 'content' } }"
+            <router-link :to="{ name: 'Screens', query: { tab: 'content' } }"
               class="small link-primary text-decoration-none">View Library
               &nbsp;▸</router-link>
           </div>
@@ -287,7 +287,7 @@ export default {
       quickStats: [],
       activity: [],
       events: [],
-      displays: [],
+      screens: [],
       playlists: [],
       approvals: [],
       content: [],
@@ -327,24 +327,24 @@ export default {
     },
     subStats(title) {
       let statSet = [];
-      if (title === "displays") {
+      if (title === "screens") {
         statSet = [
           {
             label: 'Online',
-            value: this.displays.filter((d) => d.status === 'online').length,
+            value: this.screens.filter((d) => d.status === 'online').length,
             color: 'success-emphasis',
             bgColor: 'success-subtle'
           },
           {
             label: 'Offline',
-            value: this.displays.filter((d) => d.status === 'offline').length,
+            value: this.screens.filter((d) => d.status === 'offline').length,
             color: 'danger-emphasis',
             bgColor: 'danger-subtle'
 
           },
           {
             label: 'Disabled',
-            value: this.displays.filter((d) => d.status === 'disabled').length,
+            value: this.screens.filter((d) => d.status === 'disabled').length,
             color: 'muted',
             bgColor: 'body-secondary'
 
@@ -382,8 +382,8 @@ export default {
         case 'playlists':
           desc = this.playlists.find((e) => e.id === a.entity_id)?.name;
           break;
-        case 'displays':
-          desc = this.displays.find((e) => e.id === a.entity_id)?.name;
+        case 'screens':
+          desc = this.screens.find((e) => e.id === a.entity_id)?.name;
           break;
         case 'content':
           desc = this.content.find((e) => e.id === a.entity_id)?.title;
@@ -411,11 +411,11 @@ export default {
       }).slice(0, 5).sort((a, b) => new Date(b.date) - new Date(a.date));
     },
     employeeEvents() {
-      return this.events.filter((event) => event.category === "employee").slice(0, 3);
+      return this.events.filter((event) => event.type === "employee").slice(0, 3);
     },
     upcomingAnnouncements() {
       return this.events
-        .filter((event) => event.category === "announcement" && event.subtype !== "weather")
+        .filter((event) => event.type === "announcement" && event.subtype !== "weather")
         .sort((a, b) => new Date(a.start) - new Date(b.start))
         .slice(0, 5);
     },
@@ -423,14 +423,14 @@ export default {
   async mounted() {
     try {
       this.loading = true;
-
-      this.events = (await this.$axios.get(this.$api + "events?all=1")).data;
-      this.displays = (await this.$axios.get(this.$api + "displays?all=1")).data;
-      this.playlists = (await this.$axios.get(this.$api + "playlists?all=1")).data;
-      this.content = (await this.$axios.get(this.$api + "content?all=1")).data;
-      this.approvals = (await this.$axios.get(this.$api + "approvals?all=1")).data;
-      this.activity = (await this.$axios.get(this.$api + "activity?all=1")).data;
-      this.employees = (await this.$axios.get(this.$api + "employees?all=1")).data;
+      console.log(store.events)
+      this.events = store.events;
+      this.screens = store.screens;
+      this.playlists = store.playlists;
+      this.content = store.content;
+      this.approvals = store.approvals;
+      this.activity = store.activity;
+      this.employees = store.employees; // continue here: migrate vals to the store
 
       // filter content by create date desc
       this.recentUploads = this.content
@@ -443,7 +443,7 @@ export default {
 
       this.quickStats = [
         {
-          title: "displays",
+          title: "screens",
           icon: markRaw(Television),
           color: "success",
           stat: {},
@@ -468,10 +468,10 @@ export default {
         }]
 
       this.quickStats.forEach(({ title, stat: { online, offline, disabled, pending, approved, rejected } }) => {
-        if (title === "displays") {
-          online = this.displays.filter((d) => d.status === "online").length;
-          offline = this.displays.filter((d) => d.status === "offline").length;
-          disabled = this.displays.filter((d) => d.status === "disabled").length;
+        if (title === "screens") {
+          online = this.screens.filter((d) => d.status === "online").length;
+          offline = this.screens.filter((d) => d.status === "offline").length;
+          disabled = this.screens.filter((d) => d.status === "disabled").length;
         }
         if (title === "approvals") {
           pending = this.approvals.filter((a) => a.status === "pending").length;

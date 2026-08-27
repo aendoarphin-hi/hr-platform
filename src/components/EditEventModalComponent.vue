@@ -11,8 +11,8 @@
             </strong>
             <div class="d-flex flex-row gap-2 align-items-center">
               <div class="badge rounded-pill text-capitalize" style="width: min-content;"
-                :class="badgeClass(currentEvent.extendedProps.category)">
-                {{ formatLabel(currentEvent.extendedProps.category) }} |
+                :class="badgeClass(currentEvent.extendedProps.type)">
+                {{ formatLabel(currentEvent.extendedProps.type) }} |
                 {{ formatLabel(currentEvent.extendedProps.subtype) }}
               </div>
               <small class="text-muted">
@@ -203,8 +203,8 @@ export default {
 
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     },
-    badgeClass(category) {
-      switch (category) {
+    badgeClass(type) {
+      switch (type) {
         case "employee":
           return "bg-warning-subtle text-warning-emphasis";
 

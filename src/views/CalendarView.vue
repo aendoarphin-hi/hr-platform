@@ -2,9 +2,9 @@
   <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
-      <p>Events dictate how long a scheduled display will last on a screen. Use the calendar to manage events.</p>
+      <p>Events dictate how long a scheduled screen will last on a screen. Use the calendar to manage events.</p>
       <h5>Types of Events</h5>
-      <p>Below is a table of event categories and subtypes to choose from.</p>
+      <p>Below is a table of event types and subtypes to choose from.</p>
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light sticky-top shadow-sm">
@@ -14,9 +14,9 @@
             </tr>
           </thead>
           <tbody class="table-group-divider text-capitalize">
-            <tr v-for="c in categories" :key="c">
-              <td>{{ c }}</td>
-              <td>{{ subtypes.filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.category === c)).join(', ') }}</td>
+            <tr v-for="t in eventTypes" :key="t">
+              <td>{{ t }}</td>
+              <td>{{ eventSubtypes.filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.type === t)).join(', ') }}</td>
             </tr>
           </tbody>
         </table>
@@ -99,7 +99,7 @@ export default {
         end: new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16),
         allDay: false,
         extendedProps: {
-          category: "",
+          type: "",
           subtype: "",
           location: "",
           description: ""
@@ -194,19 +194,19 @@ export default {
       // inject events
       this.calendarOptions.events = events
 
-      // if qparam filter=announcements, then filter where category is 'announcment'
+      // if qparam filter=announcements, then filter where type is 'announcment'
       if (this.$route.query.filter === 'announcements') {
-        this.calendarOptions.events = this.calendarOptions.events.filter(e => e.category === 'announcement')
+        this.calendarOptions.events = this.calendarOptions.events.filter(e => e.type === 'announcement')
       }
     }
   },
   computed: {
-    // get all posible categories
-    categories() {
-      return this.calendarOptions.events.map((e) => e.category).filter((v, i, a) => a.indexOf(v) === i);
+    // get all possible types
+    eventTypes() {
+      return this.calendarOptions.events.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
     },
-    // get all posible subtypes
-    subtypes() {
+    // get all possible subtypes
+    eventSubtypes() {
       return this.calendarOptions.events.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
     }
   },

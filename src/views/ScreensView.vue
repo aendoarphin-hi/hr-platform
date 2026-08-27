@@ -3,26 +3,26 @@
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Navigating</h5>
-      <p>Use the tabs to navigate between <strong>Displays, Playlists, Content</strong>.</p>
-      <h5>Displays</h5>
+      <p>Use the tabs to navigate between <strong>Screens, Playlists, Content</strong>.</p>
+      <h5>Screens</h5>
       <p>
-        Each screen device (display) can be edited (
+        Each screen device (screen) can be edited (
         <Pencil />) and assigned a playlist, which contains a set of ordered images (content) to be presented.
         Online or disabled devices can also be rebooted (
         <Restart />) or previewed (
         <Eye />)
       </p>
-      <h5>Display Status</h5>
-      <span :class="statusBadgeClass('online')" class="badge">Online</span><small> - Display is fully operational and
+      <h5>Screen Status</h5>
+      <span :class="statusBadgeClass('online')" class="badge">Online</span><small> - Screen is fully operational and
         all actions can be applied.</small><br />
       <span :class="statusBadgeClass('offline')" class="badge">Offline</span><small> - Changes cannot be applied to
-        display.</small><br />
-      <span :class="statusBadgeClass('disabled')" class="badge">Disabled</span><small> - Display has been suspended. No
+        screen.</small><br />
+      <span :class="statusBadgeClass('disabled')" class="badge">Disabled</span><small> - Screen has been suspended. No
         content will be shown.</small><br /><br />
       <h5>Playlists</h5>
       <p>
         Playlists can be edited (
-        <Pencil />) and assigned to a display. Playlists contain a set of ordered images (content) to be presented.
+        <Pencil />) and assigned to a screen. Playlists contain a set of ordered images (content) to be presented.
         Each playlist is created by a user with <span class="btn btn-sm btn-success small">
           <PlaylistPlay /> New Playlist
         </span>
@@ -40,7 +40,7 @@
       <small>
         <strong>System</strong> - All actions allowed, with additional backend configuration options for screen
         devices<br />
-        <strong>HR</strong> - Manage events, displays, playlists, content, and approvals<br />
+        <strong>HR</strong> - Manage events, screens, playlists, content, and approvals<br />
         <strong>Supervisors</strong> - Upload content and create new playlists
       </small>
     </HelpModalComponent>
@@ -69,7 +69,7 @@
     <!-- main content -->
     <div class="card p-3">
       <!-- tabs -->
-      <ul class="nav nav-tabs" id="displays-tab-list" role="tablist">
+      <ul class="nav nav-tabs" id="screens-tab-list" role="tablist">
         <li v-for="endpoint in endpoints" :key="endpoint" class="nav-item" role="presentation">
           <button class="nav-link text-capitalize" :class="activeTab === endpoint ? 'active' : ''"
             @click="activeTab = endpoint; search = ''" :id="`${endpoint}-tab`" type="button" role="tab">
@@ -80,15 +80,15 @@
       <!-- tab views -->
       <div class="tab-content">
         <!-- =======================  DISPLAYS TAB VIEW   =============================== -->
-        <div v-if="dataReady" class="tab-pane fade show" :class="activeTab === 'displays' ? 'show active' : ''"
-          id="displays">
+        <div v-if="dataReady" class="tab-pane fade show" :class="activeTab === 'screens' ? 'show active' : ''"
+          id="screens">
           <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <!-- Filters -->
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <small>
                 <Filter class="me-1" />Filter By
               </small>
-              <select class="form-select form-select-sm text-capitalize" v-model="filters.displays.location"
+              <select class="form-select form-select-sm text-capitalize" v-model="filters.screens.location"
                 style="width: 180px">
                 <option value="" selected>All Locations</option>
 
@@ -97,7 +97,7 @@
                 </option>
               </select>
 
-              <select class="form-select form-select-sm text-capitalize" v-model="filters.displays.status"
+              <select class="form-select form-select-sm text-capitalize" v-model="filters.screens.status"
                 style="width: 160px">
                 <option value="">All Statuses</option>
                 <option value="online">Online</option>
@@ -114,12 +114,12 @@
               <small>
                 <Sort class="me-1" />Sort By
               </small>
-              <select id="status-sort-displays" class="form-select form-select-sm text-capitalize"
-                :value="sortColumns.displays" @change="sortList($event.target.value)" style="width: 180px">
+              <select id="status-sort-screens" class="form-select form-select-sm text-capitalize"
+                :value="sortColumns.screens" @change="sortList($event.target.value)" style="width: 180px">
 
-                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Asc
+                <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Asc
                 </option>
-                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Desc
+                <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Desc
                 </option>
               </select>
 
@@ -136,21 +136,21 @@
               </div>
 
               <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
-                @click="() => refreshTabPane('displays')">
+                @click="() => refreshTabPane('screens')">
                 <Refresh />
               </button>
             </div>
           </div>
           <!-- list view -->
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
-            <table v-if="displays && !initializing" class="table table-hover align-middle mb-0">
+            <table v-if="screens && !initializing" class="table table-hover align-middle mb-0">
               <thead class="table-light sticky-top shadow-sm">
                 <tr class="small text-uppercase">
-                  <th v-for="(sc, i) in sortableColumns.displays" class="cursor-pointer" v-bind:key="i"
+                  <th v-for="(sc, i) in sortableColumns.screens" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
                     {{ columnLabel(sc) }}
-                    <template v-if="sc === sortColumns.displays">
-                      <TriangleSmallUp v-if="!sortDesc.displays" />
+                    <template v-if="sc === sortColumns.screens">
+                      <TriangleSmallUp v-if="!sortDesc.screens" />
                       <TriangleSmallDown v-else />
                     </template>
                   </th>
@@ -159,7 +159,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(d, i) in displays" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                <tr v-for="(d, i) in screens" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                   <td class="fw-semibold"
                     style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
                     {{ d.name }}
@@ -187,13 +187,13 @@
                 </tr>
               </tbody>
             </table>
-            <LoadingComponent v-else message="Loading displays..." />
+            <LoadingComponent v-else message="Loading screens..." />
           </div>
           <!-- grid view -->
           <div v-else-if="dataReady && viewMode === 'grid'"
             class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh;">
-            <div v-for="(d, i) in displays" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
+            <div v-for="(d, i) in screens" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
               class="card shadow-sm border col-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
@@ -217,7 +217,7 @@
           </div>
         </div>
         <div v-else>
-          <LoadingComponent message="Loading displays..." />
+          <LoadingComponent message="Loading screens..." />
         </div>
         <!-- =======================  PLAYLIST TAB VIEW   =============================== -->
         <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''"
@@ -231,9 +231,9 @@
               <select id="status-sort-playlists" class="form-select form-select-sm text-capitalize"
                 :value="sortColumns.playlists" @change="sortList($event.target.value)" style="width: 180px">
 
-                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Asc
+                <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Asc
                 </option>
-                <option v-for="sc in sortableColumns.displays" :key="sc" :value="sc">{{ sc }} - Desc
+                <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Desc
                 </option>
               </select>
             </div>
@@ -472,7 +472,7 @@
     </div>
   </div>
   <div v-else>
-    <LoadingComponent message="Loading displays..." />
+    <LoadingComponent message="Loading screens..." />
   </div>
 </template>
 
@@ -501,7 +501,7 @@ import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 import { filterByField, searchByText, sortByField } from "@/common/helpers";
 
 export default {
-  name: "DisplayView",
+  name: "ScreenView",
   components: {
     Filter,
     Sort,
@@ -527,15 +527,15 @@ export default {
   data() {
     return {
       initializing: true, // loading state
-      endpoints: ["displays", "playlists", "content"],
-      rawDisplays: [],
+      endpoints: ["screens", "playlists", "content"],
+      rawScreens: [],
       rawPlaylists: [],
       rawContent: [],
       locations: [],
       dataReady: false,
       search: "",
       filters: {
-        displays: {
+        screens: {
           location: "",
           status: "",
         },
@@ -545,23 +545,23 @@ export default {
         },
       },
       sortColumns: {
-        displays: "name",
+        screens: "name",
         playlists: "name",
         content: "type",
       },
       sortableColumns: {
-        displays: ["name", "location", "status"],
+        screens: ["name", "location", "status"],
         playlists: ["name", "description"],
         content: ["type", "title", "status", "created_at", "filename"],
       },
       sortDesc: {
-        displays: false,
+        screens: false,
         playlists: false,
         content: false,
       },
       hoverIndex: -1, // for hover effect on tab actions
       viewMode: "grid", // grid or list
-      activeTab: "displays", // active tab
+      activeTab: "screens", // active tab
     };
   },
   computed: {
@@ -570,20 +570,20 @@ export default {
       return [...new Set(this.rawContent.map((c) => c.type))].sort();
     },
 
-    displays() {
+    screens() {
       const locationNameById = Object.fromEntries(
         this.locations.map((l) => [l.id, l.name])
       );
-      let result = this.rawDisplays.map((d) => ({
+      let result = this.rawScreens.map((d) => ({
         ...d,
         location: locationNameById[d.location_id] ?? "",
       }));
-      result = filterByField(result, "location", this.filters.displays.location);
-      result = filterByField(result, "status", this.filters.displays.status);
+      result = filterByField(result, "location", this.filters.screens.location);
+      result = filterByField(result, "status", this.filters.screens.status);
       if (this.search.trim().length > 0) {
         result = searchByText(result, this.search);
       }
-      return sortByField(result, this.sortColumns.displays, this.sortDesc.displays);
+      return sortByField(result, this.sortColumns.screens, this.sortDesc.screens);
     },
 
     playlists() {
@@ -638,8 +638,8 @@ export default {
     async fetchEndpoint(endpoint) {
       const res = await this.$axios.get(this.$api + endpoint + "?all=1");
       switch (endpoint) {
-        case "displays":
-          this.rawDisplays = res.data;
+        case "screens":
+          this.rawScreens = res.data;
           break;
         case "playlists":
           this.rawPlaylists = res.data;

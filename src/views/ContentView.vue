@@ -104,7 +104,7 @@
 
     <LoadingComponent v-if="loading" message="Loading content library..." />
 
-    <!-- ===== content display: grid view ===== -->
+    <!-- ===== content screen: grid view ===== -->
     <div v-else-if="viewMode === 'grid' && filteredContent.length"
       class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
       style="max-height: 500px">
@@ -151,7 +151,7 @@
       </div>
     </div>
 
-    <!-- ===== content display: list view ===== -->
+    <!-- ===== content screen: list view ===== -->
     <div v-else-if="viewMode === 'list' && filteredContent.length" class="mt-3">
       <table class="card overflow-hidden table table-hover align-middle mb-0 table-scroll">
         <thead class="card-header">

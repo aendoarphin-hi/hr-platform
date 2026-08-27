@@ -6,10 +6,4 @@ export const config = {
   supportEmail: 'hr@haydenindustrial.com',
   api: '/ttprod/v3/hrcomms/',
 }
-// limits subtypes based on chosen category
-export const eventCategorySubtypeMap = {
-  company: ['general', 'holiday', 'training', 'meeting'],
-  employee: ['birthday', 'anniversary', 'promotion', 'new_hire'],
-  announcement: ['general', 'urgent', 'maintenance', 'production', 'weather', 'safety']
-}
 
