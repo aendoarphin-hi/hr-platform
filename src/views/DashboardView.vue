@@ -23,41 +23,46 @@
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
         <button class="btn btn-sm btn-success" @click="open">+ Create Announcement</button>
-        <button class="btn btn-sm btn-primary" @click="openUploadModal"><UploadBox /> Upload Content</button>
-        <button class="btn btn-sm btn-danger" @click="open"><ExclamationThick /> Issue Emergency Alert</button> <!-- not same as events; do something that is immediate -->
+        <button class="btn btn-sm btn-primary" @click="openUploadModal">
+          <UploadBox /> Upload Content
+        </button>
+        <button class="btn btn-sm btn-danger" @click="open">
+          <ExclamationThick /> Issue Emergency Alert
+        </button> <!-- not same as events; do something that is immediate -->
       </div>
     </div>
 
     <!--  KPI stat cards  -->
     <div class="row g-3 mb-4">
-        <RouterLink v-for="s in quickStats" :key="s.title" :to="{ name: 'Screens', query: { tab: s.title } }" class="col-12 col-md-6 col-lg-3 text-decoration-none">
-          <div class="card shadow-sm border border-0 hstack h-100">
-            <div class="card-body hstack align-items-start">
-              <div class="col cursor-pointer">
-                <div class="text-muted text-uppercase hstack text-fluid">
-                  <component :is="s.icon" />&nbsp;&nbsp;{{ s.title }}
-                </div>
-                <h2 class="fw-semibold lh-1">{{
-                  s.title === 'screens'
-                    ? screens.length
-                    : s.title === 'content'
-                      ? content.length
-                      : s.title === 'playlists'
-                        ? playlists.length
-                        : s.title === 'approvals'
-                          ? approvals.length
-                          : 0
-                }}</h2>
+      <RouterLink v-for="s in quickStats" :key="s.title" :to="{ name: 'Screens', query: { tab: s.title } }"
+        class="col-12 col-md-6 col-lg-3 text-decoration-none">
+        <div class="card shadow-sm border border-0 hstack h-100">
+          <div class="card-body hstack align-items-start">
+            <div class="col cursor-pointer">
+              <div class="text-muted text-uppercase hstack text-fluid">
+                <component :is="s.icon" />&nbsp;&nbsp;{{ s.title }}
               </div>
-              <div class="text-muted text-fluid gap-1 align-self-start d-flex flex-column my-auto cursor-pointer">
-                <div v-for="d in subStats(s.title)" :key="'stat-' + d.label"
-                  class="badge badge-pill align-items-center justify-content-end rounded d-flex text-uppercase fw-semibold"
-                  :class="`text-${d.color} bg-${d.bgColor} ${d.value === 0 ? 'd-none' : ''}`"><span class="me-auto">{{
-                    d.label }}</span>&nbsp;&nbsp;&nbsp;{{ d.value }}</div>
-              </div>
+              <h2 class="fw-semibold lh-1">{{
+                s.title === 'screens'
+                  ? screens.length
+                  : s.title === 'content'
+                    ? content.length
+                    : s.title === 'playlists'
+                      ? playlists.length
+                      : s.title === 'approvals'
+                        ? approvals.length
+                        : 0
+              }}</h2>
+            </div>
+            <div class="text-muted text-fluid gap-1 align-self-start d-flex flex-column my-auto cursor-pointer">
+              <div v-for="d in subStats(s.title)" :key="'stat-' + d.label"
+                class="badge badge-pill align-items-center justify-content-end rounded d-flex text-uppercase fw-semibold"
+                :class="`text-${d.color} bg-${d.bgColor} ${d.value === 0 ? 'd-none' : ''}`"><span class="me-auto">{{
+                  d.label }}</span>&nbsp;&nbsp;&nbsp;{{ d.value }}</div>
             </div>
           </div>
-        </RouterLink>
+        </div>
+      </RouterLink>
     </div>
 
     <!--  main content + sidebar  -->
@@ -152,7 +157,7 @@
           <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h6 class="text-secondary card-title mb-0 d-flex align-items-center gap-2 fw-semibold">
               <span class="mb-1">
-                <CalendarStar class="fs-5" />
+                <People class="fs-5" />
               </span>
               People
             </h6>
@@ -182,16 +187,14 @@
           <div class="card-header bg-white d-flex align-items-center">
             <h6 class="mb-0 d-flex align-items-center gap-2 fw-semibold text-secondary">
               <span class="mb-1">
-                <AccountClock class="fs-5" />
+                <ClockOutline class="fs-5" />
               </span>
               Recent Activity
             </h6>
           </div>
           <div class="timeline">
             <template v-if="recentActivity.length > 0">
-              <div
-                v-for="a in recentActivity"
-                :key="a.id" class="timeline-item">
+              <div v-for="a in recentActivity" :key="a.id" class="timeline-item">
                 <div class="timeline-content p-3">
                   <div class="d-flex align-items-center gap-2">
                     <span
@@ -250,8 +253,8 @@ import Bullhorn from "vue-material-design-icons/Bullhorn.vue";
 import Magnify from "vue-material-design-icons/Magnify.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
 import CalendarMonth from "vue-material-design-icons/CalendarMonth.vue";
-import AccountClock from "vue-material-design-icons/AccountClock.vue";
-import CalendarStar from "vue-material-design-icons/CalendarStar.vue";
+import ClockOutline from "vue-material-design-icons/ClockOutline.vue";
+import People from "vue-material-design-icons/AccountGroup.vue";
 import HelpCircleOutline from "vue-material-design-icons/HelpCircleOutline.vue";
 import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import Calendar from "vue-material-design-icons/Calendar.vue";
@@ -273,8 +276,8 @@ export default {
     PlaylistPlay,
     AccountCircle,
     Television,
-    AccountClock,
-    CalendarStar,
+    ClockOutline,
+    People,
     HelpCircleOutline,
     FileDocument,
     Calendar,
@@ -285,16 +288,7 @@ export default {
     return {
       loading: false,
       quickStats: [],
-      activity: [],
-      events: [],
-      screens: [],
-      playlists: [],
-      approvals: [],
-      content: [],
-      employees: [],
       needsAttention: [],
-      // placeholder rows
-      recentUploads: []
     };
   },
   methods: {
@@ -399,10 +393,41 @@ export default {
       }
       return `${a.action}d ${entity}: ${desc}`;
     },
+    recentEvents() {
+      return this.events
+        .sort((a, b) => new Date(a.start) - new Date(b.start))
+        .filter((event) => new Date(event.start) >= new Date());
+    },
   },
   computed: {
+    activity() {
+      return store.activity;
+    },
+    events() {
+      return store.events;
+    },
+    screens() {
+      return store.screens;
+    },
+    playlists() {
+      return store.playlists;
+    },
+    content() {
+      return store.content;
+    },
+    approvals() {
+      return store.approvals;
+    },
+    employees() {
+      return store.employees;
+    },
+    recentUploads() {
+      return [...this.content]
+        .sort((a, b) => new Date(b.created) - new Date(a.created))
+        .slice(0, 5);
+    },
     recentActivity() {
-      return this.activity.map((a) => { 
+      return this.activity.map((a) => {
         const employee = this.employees.find((e) => parseInt(e.number) === parseInt(a.enum));
         return {
           ...a,
@@ -423,23 +448,13 @@ export default {
   async mounted() {
     try {
       this.loading = true;
-      console.log(store.events)
-      this.events = store.events;
-      this.screens = store.screens;
-      this.playlists = store.playlists;
-      this.content = store.content;
-      this.approvals = store.approvals;
-      this.activity = store.activity;
-      this.employees = store.employees; // continue here: migrate vals to the store
-
-      // filter content by create date desc
-      this.recentUploads = this.content
-        .sort((a, b) => new Date(b.created) - new Date(a.created))
-        .slice(0, 5);
-
-      this.events = this.events
-        .sort((a, b) => new Date(a.start) - new Date(b.start))
-        .filter((event) => new Date(event.start) >= new Date());
+      // this.events = store.events;
+      // this.screens = store.screens;
+      // this.playlists = store.playlists;
+      // this.content = store.content;
+      // this.approvals = store.approvals;
+      // this.activity = store.activity;
+      // this.employees = store.employees;
 
       this.quickStats = [
         {
@@ -462,7 +477,7 @@ export default {
         },
         {
           title: "approvals",
-          icon: markRaw(AccountClock),
+          icon: markRaw(ClockOutline),
           color: "primary",
           stat: {},
         }]
