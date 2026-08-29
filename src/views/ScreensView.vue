@@ -79,17 +79,18 @@
       </ul>
       <!-- tab views -->
       <div class="tab-content">
-        <!-- =======================  DISPLAYS TAB VIEW   =============================== -->
+        <!-- =======================  SCREENS TAB VIEW   =============================== -->
         <div v-if="dataReady" class="tab-pane fade show" :class="activeTab === 'screens' ? 'show active' : ''"
           id="screens">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <!-- filters, sort, view toggle row -->
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <!-- Filters -->
-            <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="hstack gap-2">
               <small>
                 <Filter class="me-1" />Filter By
               </small>
               <select class="form-select form-select-sm text-capitalize" v-model="filters.screens.location"
-                style="width: 180px">
+                style="width: 160px">
                 <option value="" selected>All Locations</option>
 
                 <option v-for="l in locations" :key="l.id" :value="l.name">
@@ -98,49 +99,52 @@
               </select>
 
               <select class="form-select form-select-sm text-capitalize" v-model="filters.screens.status"
-                style="width: 160px">
+                style="width: 140px">
                 <option value="">All Statuses</option>
                 <option value="online">Online</option>
                 <option value="offline">Offline</option>
                 <option value="disabled">Disabled</option>
               </select>
             </div>
-
-            <!-- search bar -->
-            <input type="search" class="form-control form-control-sm col" placeholder="Search" v-model="search" />
-
+            <!-- search bar 1 -->
+            <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search" v-model="search" />
             <!-- sort dropdown -->
-            <div class="d-flex align-items-center gap-2">
+            <div class="ms-0 ms-lg-auto hstack gap-2">
               <small>
                 <Sort class="me-1" />Sort By
               </small>
               <select id="status-sort-screens" class="form-select form-select-sm text-capitalize"
-                :value="sortColumns.screens" @change="sortList($event.target.value)" style="width: 180px">
+                :value="sortColumns.screens" @change="sortList($event.target.value)" style="width: 160px">
 
                 <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Asc
                 </option>
                 <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Desc
                 </option>
               </select>
-
-              <!-- view toggle for grid/list -->
-              <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
-                  title="List view" @click="viewMode = 'list'">
-                  <ViewList />
-                </button>
-                <button type="button" class="btn" :class="viewMode === 'grid' ? 'btn-primary' : 'btn-outline-secondary'"
-                  title="Grid view" @click="viewMode = 'grid'">
-                  <ViewGrid />
-                </button>
-              </div>
-
-              <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
-                @click="() => refreshTabPane('screens')">
-                <Refresh />
+            </div>
+            <!-- view toggle for grid/list -->
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
+                title="List view" @click="viewMode = 'list'">
+                <ViewList />
+              </button>
+              <button type="button" class="btn" :class="viewMode === 'grid' ? 'btn-primary' : 'btn-outline-secondary'"
+                title="Grid view" @click="viewMode = 'grid'">
+                <ViewGrid />
               </button>
             </div>
+            <!-- refresh button -->
+            <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
+              @click="() => refreshTabPane('screens')">
+              <Refresh />
+            </button>
+            <!-- clear filter button -->
+            <button @click="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+              <FilterOffOutline />
+            </button>
           </div>
+          <!-- search bar 2 -->
+          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search" v-model="search" />
           <!-- list view -->
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="screens && !initializing" class="table table-hover align-middle mb-0">
@@ -187,14 +191,14 @@
                 </tr>
               </tbody>
             </table>
-            <LoadingComponent v-else message="Loading screens..." />
+            <LoadingComponent v-else message="Loading screens..." class="my-auto" />
           </div>
           <!-- grid view -->
           <div v-else-if="dataReady && viewMode === 'grid'"
-            class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
+            class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh;">
             <div v-for="(d, i) in screens" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-              class="card shadow-sm border col-2">
+              class="card shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                   <Television /> {{ d.name }}
@@ -202,7 +206,7 @@
                 <small>
                   <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
                 </small>
-                <small>
+                <small v-if="d.playlist_id" class="text-muted">
                   <PlaylistPlay /> {{ getPlaylistName(d.playlist_id) }}
                 </small>
                 <small v-if="d.location" class="text-muted">
@@ -222,14 +226,17 @@
         <!-- =======================  PLAYLIST TAB VIEW   =============================== -->
         <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''"
           id="playlists">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
-            <div class="me-auto hstack gap-2">
-              <!-- sort dropdown -->
+          <!-- sort, view toggle row -->
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+            <!-- search bar 1 -->
+          <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search" v-model="search" />
+            <!-- sort dropdown -->
+            <div class="ms-0 hstack gap-2">
               <small>
                 <Sort class="me-1" />Sort By
               </small>
               <select id="status-sort-playlists" class="form-select form-select-sm text-capitalize"
-                :value="sortColumns.playlists" @change="sortList($event.target.value)" style="width: 180px">
+                :value="sortColumns.playlists" @change="sortList($event.target.value)" style="width: 160px">
 
                 <option v-for="sc in sortableColumns.screens" :key="sc" :value="sc">{{ sc }} - Asc
                 </option>
@@ -237,29 +244,29 @@
                 </option>
               </select>
             </div>
-
-            <!-- search bar -->
-            <input type="search" class="form-control form-control-sm col" placeholder="Search" v-model="search" />
-
-            <div class="ms-auto">
-              <!-- view toggle for grid/list -->
-              <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
-                  title="List view" @click="viewMode = 'list'">
-                  <ViewList />
-                </button>
-                <button type="button" class="btn" :class="viewMode === 'grid' ? 'btn-primary' : 'btn-outline-secondary'"
-                  title="Grid view" @click="viewMode = 'grid'">
-                  <ViewGrid />
-                </button>
-              </div>
-
-              <button :disabled="initializing" class="btn btn-outline-secondary btn-sm ms-2" title="Refresh"
-                @click="() => refreshTabPane('playlists')">
-                <Refresh />
+            <!-- view toggle for grid/list -->
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
+                title="List view" @click="viewMode = 'list'">
+                <ViewList />
+              </button>
+              <button type="button" class="btn" :class="viewMode === 'grid' ? 'btn-primary' : 'btn-outline-secondary'"
+                title="Grid view" @click="viewMode = 'grid'">
+                <ViewGrid />
               </button>
             </div>
+            <!-- refresh button -->
+            <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
+              @click="() => refreshTabPane('playlists')">
+              <Refresh />
+            </button>
+            <!-- clear filter button -->
+            <button @click="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+              <FilterOffOutline />
+            </button>
           </div>
+          <!-- search bar 2 -->
+          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search" v-model="search" />
           <!-- list view -->
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="playlists && !initializing" class="table table-hover align-middle mb-0">
@@ -298,10 +305,10 @@
 
           <!-- grid view -->
           <div v-else-if="dataReady && viewMode === 'grid'"
-            class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
+            class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
             <div v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-              class="card shadow-sm border col-2">
+              class="card shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                   <PlaylistPlay /> {{ p.name }}
@@ -321,21 +328,19 @@
         </div>
         <!-- =======================  CONTENT TAB VIEW   =============================== -->
         <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             <!-- Filters -->
-            <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="hstack gap-2">
               <small>
                 <Filter class="me-1" />Filter By
               </small>
               <select class="form-select form-select-sm text-capitalize" v-model="filters.content.type"
                 style="width: 160px">
                 <option value="" selected>All Types</option>
-
                 <option v-for="type in uniqueContentTypes" :key="type" :value="type">
                   {{ type }}
                 </option>
               </select>
-
               <select class="form-select form-select-sm" v-model="filters.content.status" style="width: 160px">
                 <option value="">All Statuses</option>
                 <option value="active">Active</option>
@@ -343,12 +348,8 @@
                 <option value="archived">Archived</option>
               </select>
             </div>
-
-            <!-- search bar -->
-            <input type="search" class="form-control form-control-sm col" placeholder="Search" v-model="search" />
-
             <!-- sort dropdown -->
-            <div class="d-flex align-items-center gap-2">
+            <div class="ms-0 ms-lg-auto hstack gap-2">
               <small>
                 <Sort class="me-1" />Sort By
               </small>
@@ -364,28 +365,30 @@
                     ? sc.split('_').join(' ') : sc }} - Desc
                 </option>
               </select>
-
-              <!-- view toggle for grid/list -->
-              <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
-                  title="List view" @click="viewMode = 'list'">
-                  <ViewList />
-                </button>
-                <button type="button" class="btn" :class="viewMode === 'grid' ? 'btn-primary' : 'btn-outline-secondary'"
-                  title="Grid view" @click="viewMode = 'grid'">
-                  <ViewGrid />
-                </button>
-              </div>
-
-              <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
-                @click="() => refreshTabPane('content')">
-                <Refresh />
+            </div>
+            <!-- view toggle for grid/list -->
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
+                title="List view" @click="viewMode = 'list'">
+                <ViewList />
               </button>
-              <button @click="filters.content = {}" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
-                <FilterOffOutline />
+              <button type="button" class="btn" :class="viewMode === 'grid' ? 'btn-primary' : 'btn-outline-secondary'"
+                title="Grid view" @click="viewMode = 'grid'">
+                <ViewGrid />
               </button>
             </div>
+            <!-- refresh button -->
+            <button :disabled="initializing" class="btn btn-outline-secondary btn-sm" title="Refresh"
+              @click="() => refreshTabPane('content')">
+              <Refresh />
+            </button>
+            <button @click="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+              <FilterOffOutline />
+            </button>
           </div>
+          <!-- search bar -->
+          <input type="search" class="form-control form-control-sm col mb-3" placeholder="Search" v-model="search" />
+
           <!-- content -->
 
           <!-- list view -->
@@ -438,10 +441,10 @@
 
           <!-- grid view -->
           <div v-else-if="dataReady && viewMode === 'grid'"
-            class="d-flex flex-row flex-wrap gap-3 overflow-hidden overflow-y-auto border-bottom border-top py-3"
+            class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
             <div v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-              class="card shadow-sm border col-2 overflow-hidden">
+              class="card shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2 overflow-hidden">
               <!-- will provide thumbnail but for now set it as the logo of file type -->
               <!-- <img src="https://picsum.photos/400/200" class="card-img-top" alt="Thumbnail"
                 style="height: 100px; object-fit: cover" /> -->
@@ -449,7 +452,7 @@
                 style="height: 100px;">
                 <span v-if="hoverIndex === i" style="background-color: rgba(0,0,0,0.5);"
                   class="w-100 h-100 d-flex justify-content-center fs-5">
-                  <Pencil />
+                  <Pencil class="text-white" />
                 </span>
                 <component v-else style="filter: drop-shadow(0 5px 3px rgba(0,0,0,0.5));"
                   :is="getContentThumbnail(c).icon" />
@@ -605,6 +608,19 @@ export default {
     },
   },
   methods: {
+    clearFilters() {
+      this.filters = {
+        screens: {
+          location: "",
+          status: "",
+        },
+        content: {
+          type: "",
+          status: "",
+        },
+      };
+      this.search = "";
+    },
     getContentThumbnail(c) {
       switch (c.type) {
         case "image":
