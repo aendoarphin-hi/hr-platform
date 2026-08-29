@@ -68,18 +68,14 @@ export default {
     };
   },
   async mounted() {
-    if (window.location.hostname === 'localhost') {
-      this.userdata = user
-    } else {
-      try {
-        const res = await this.$axios.get(this.$api + 'employees?auth');
+    try {
+      const res = await this.$axios.get(this.$api + 'employees?auth');
 
-        res.data.groups = Object.values(res.data.groups ?? {});
+      res.data.groups = Object.values(res.data.groups ?? {});
 
-        this.userdata = res.data;
-      } catch (error) {
-        console.log(error);
-      }
+      this.userdata = res.data;
+    } catch (error) {
+      console.log(error);
     }
   }
 };
