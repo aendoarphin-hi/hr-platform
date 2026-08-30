@@ -166,7 +166,6 @@ export default {
     } catch (e) {
       console.log(e.message);
     }
-    console.log(this.locations);
   },
 
   computed: {
