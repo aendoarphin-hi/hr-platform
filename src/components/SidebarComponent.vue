@@ -1,5 +1,5 @@
 <template>
-  <aside id="sidebar" :class="{ collapsed: !sidebarOpen }">
+  <aside id="sidebar" :class="{ 'collapsed': !isOpen }">
     <router-link id="sidebar-header" to="/dashboard" class="d-flex align-items-center text-decoration-none mx-auto">
       <img src="@/assets/img/hayden-blue.svg" alt="Hayden Logo" class="me-2" />
       <span class="fs-4 text-dark text-nowrap"><strong>HAYDEN</strong> {{ this.$appname }}</span>
@@ -35,10 +35,10 @@
       </a>
     </div>
   </aside>
-  <div @click="sidebarOpen = !sidebarOpen" class="cursor-pointer"
+  <div @click="isOpen = !isOpen" class="cursor-pointer"
     style="height: 100dvh; align-items: center; display: flex; border-right: 1px solid var(--bs-border-color); position: sticky; top: 0;">
-    <ChevronLeft v-if="sidebarOpen" />
-    <ChevronRight v-if="!sidebarOpen" />
+    <ChevronLeft v-if="isOpen" />
+    <ChevronRight v-else />
   </div>
 </template>
 
@@ -60,7 +60,7 @@ export default {
   data() {
     return {
       name: "SidebarComponent",
-      sidebarOpen: true,
+      isOpen: true,
       routes: [],
     };
   },
