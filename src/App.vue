@@ -12,10 +12,8 @@
   <div class="d-flex flex-row bg-light" style="height: 100vh; overflow: auto;" :class="border ? 'borderized' : ''">
     <SidebarComponent />
     <router-view id="router-view" class="container" v-slot="{ Component }">
-      <transition 
-        enter-active-class="animate__animated animate__fadeIn animate__faster"
-        leave-active-class="animate__animated animate__fadeOut animate__faster" 
-        mode="out-in">
+      <transition enter-active-class="animate__animated animate__fadeIn animate__faster"
+        leave-active-class="animate__animated animate__fadeOut animate__faster" mode="out-in">
         <component :is="Component" :key="$route.path" />
       </transition>
     </router-view>
@@ -52,14 +50,20 @@ export default {
   },
   async mounted() {
     this.loading = true
-    // init global
-    store.events = (await this.$axios.get(this.$api + "events?all=1")).data
-    store.screens = (await this.$axios.get(this.$api + "screens?all=1")).data
-    store.playlists = (await this.$axios.get(this.$api + "playlists?all=1")).data
-    store.content = (await this.$axios.get(this.$api + "content?all=1")).data
-    store.approvals = (await this.$axios.get(this.$api + "approvals?all=1")).data
-    store.activity = (await this.$axios.get(this.$api + "activity?all=1")).data
-    store.employees = (await this.$axios.get(this.$api + "employees?all=1")).data
+    try {
+      // init global store
+      store.events = (await this.$axios.get(this.$api + "events?all=1")).data
+      store.screens = (await this.$axios.get(this.$api + "screens?all=1")).data
+      store.playlists = (await this.$axios.get(this.$api + "playlists?all=1")).data
+      store.content = (await this.$axios.get(this.$api + "content?all=1")).data
+      store.approvals = (await this.$axios.get(this.$api + "approvals?all=1")).data
+      store.activity = (await this.$axios.get(this.$api + "activity?all=1")).data
+      store.employees = (await this.$axios.get(this.$api + "employees?all=1")).data
+    } catch (error) {
+      if (error.response.status === 401) {
+        this.$router.push({ name: "Auth" });
+      }
+    }
     this.loading = false
   },
 };
