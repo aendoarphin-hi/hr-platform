@@ -201,8 +201,8 @@
                       class="activity-avatar rounded-circle d-flex align-items-center justify-content-center flex-shrink-0">
                       {{ a.name[0] }}
                     </span>
-                    <div class="flex-grow-1 min-w-0">
-                      <small class="fw-semibold">{{ a.name }}</small> <small>{{ activityDescription(a) }}</small>
+                    <div class="lh-sm small">
+                      <span class="fw-semibold">{{ a.name }}</span> {{ activityDescription(a) }}
                     </div>
                     <div class="text-muted small text-nowrap">{{ formatTimeAgo(a.created_at) }}</div>
                   </div>
