@@ -348,6 +348,8 @@
                 <option value="archived">Archived</option>
               </select>
             </div>
+            <!-- search bar 1 -->
+            <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search" v-model="search" />
             <!-- sort dropdown -->
             <div class="ms-0 ms-lg-auto hstack gap-2">
               <small>
@@ -386,8 +388,8 @@
               <FilterOffOutline />
             </button>
           </div>
-          <!-- search bar -->
-          <input type="search" class="form-control form-control-sm col mb-3" placeholder="Search" v-model="search" />
+          <!-- search bar 2 -->
+          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search" v-model="search" />
 
           <!-- content -->
 
@@ -550,7 +552,7 @@ export default {
       sortColumns: {
         screens: "name",
         playlists: "name",
-        content: "type",
+        content: "title",
       },
       sortableColumns: {
         screens: ["name", "location", "status"],
@@ -620,6 +622,16 @@ export default {
         },
       };
       this.search = "";
+      this.sortColumns = {
+        screens: "name",
+        playlists: "name",
+        content: "title",
+      };
+      this.sortDesc = {
+        screens: false,
+        playlists: false,
+        content: false,
+      };
     },
     getContentThumbnail(c) {
       switch (c.type) {
