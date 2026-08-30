@@ -16,7 +16,8 @@
           <tbody class="table-group-divider text-capitalize">
             <tr v-for="t in eventTypes" :key="t">
               <td>{{ t }}</td>
-              <td>{{ eventSubtypes.filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.type === t)).join(', ') }}</td>
+              <td>{{eventSubtypes.filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.type ===
+                t)).join(', ')}}</td>
             </tr>
           </tbody>
         </table>
@@ -41,12 +42,19 @@
     <!-- filters -->
     <div class="card p-3 mt-3">
       <div class="hstack gap-2">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="filter-announcements">
-          <label class="form-check-label" for="filter-announcements">
-            Filter Announcements
-          </label>
-        </div>
+        <!-- TODO: add filters -->
+        <select class="form-select form-select-sm text-capitalize" v-model="filters.events.type">
+          <option value="">Event Type</option>
+          <option v-for="t in eventTypes.sort()" :key="t" :value="t">{{ t }}</option>
+        </select>
+        <select :disabled="filters.events.type.length === 0" class="form-select form-select-sm text-capitalize"
+          v-model="filters.events.subtype">
+          <option value="">Event Subtype</option>
+
+          <option v-for="st in availableSubtypes" :key="st" :value="st">
+            {{ st }}
+          </option>
+        </select>
       </div>
     </div>
     <!--  calendar  -->
@@ -159,9 +167,17 @@ export default {
               document.getElementById('edit-event-modal')
             ).show()
           })
-        }
-
+        },
       },
+      eventTypes: [],
+      eventSubtypes: [],
+      allEvents: [],
+      filters: {
+        events: {
+          type: "",
+          subtype: ""
+        }
+      }
     }
   },
   methods: {
@@ -180,7 +196,9 @@ export default {
         const [startDate, startTime] = e.start.split(' ')
         const [endDate, endTime] = e.end.split(' ')
 
-        if ( // set allDay to true if start and end are the same day and time is 00:00:00 to 23:59:59
+        if (
+          // set allDay to true if start and end are the same day and 
+          // time is 00:00:00 to 23:59:59
           startDate === endDate &&
           startTime === '00:00:00' &&
           endTime === '23:59:59'
@@ -192,34 +210,60 @@ export default {
         e.color = this.subtypeColors[e.subtype] ?? 'gray'
       })
       // inject events
+      this.allEvents = events // unfiltered copy
       this.calendarOptions.events = events
-
-      // if qparam filter=announcements, then filter where type is 'announcment'
-      if (this.$route.query.filter === 'announcements') {
-        this.calendarOptions.events = this.calendarOptions.events.filter(e => e.type === 'announcement')
-      }
     }
   },
   computed: {
-    // get all possible types
-    eventTypes() {
-      return this.calendarOptions.events.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
-    },
-    // get all possible subtypes
-    eventSubtypes() {
-      return this.calendarOptions.events.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
+    availableSubtypes() {
+      if (this.filters.events.type === "") {
+        return [...this.eventSubtypes].sort()
+      }
+
+      return this.eventSubtypes
+        .filter(subtype =>
+          this.allEvents.some(event =>
+            event.type === this.filters.events.type &&
+            event.subtype === subtype
+          )
+        )
+        .sort()
     }
   },
   async mounted() {
     try {
       this.initializing = true;
 
+      // initializes event data
       const res = await this.$axios.get(this.$api + 'events?all=1');
       this.processRawEvents(res.data)
+      // initialize filters
+      this.eventTypes = this.calendarOptions.events.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
+      this.eventSubtypes = this.calendarOptions.events.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
 
       this.initializing = false;
     } catch (e) {
       console.log(e.message);
+    }
+  },
+  watch: {
+    'filters.events.type': {
+      handler() {
+        this.filters.events.subtype = ""
+      }
+    },
+    'filters.events': {
+      handler() {
+        const { type, subtype } = this.filters.events
+
+        this.calendarOptions.events = this.allEvents.filter(e => {
+          const typeMatch = type === "" || e.type === type
+          const subtypeMatch = subtype === "" || e.subtype === subtype
+
+          return typeMatch && subtypeMatch
+        })
+      },
+      deep: true
     }
   }
 }
