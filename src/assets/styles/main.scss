@@ -6,7 +6,7 @@ $hayden-blue-darker: #001f3e;
 // Bootstrap variable overrides (must come first)
 $primary: $hayden-blue;
 $nav-pills-link-active-bg: $hayden-blue;
-$nav-tabs-border-radius: 10px;
+$nav-tabs-border-radius: 6px;
 $nav-tabs-link-active-bg: $hayden-blue;
 $nav-tabs-link-active-color: white;
 $nav-link-color: black;
@@ -49,6 +49,10 @@ $table-hover-bg: rgba(0, 0, 0, 0.028);
 // animate.css infinite flashing for loading
 .animate-flash-infinite {
   animation: flash 4s infinite;
+}
+
+.animate__faster {
+  animation-duration: 200ms !important;
 }
 
 .text-fluid {
