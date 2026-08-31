@@ -2,9 +2,10 @@
   <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
-      <p>Events dictate how long a scheduled screen will last on a screen. Use the calendar to manage events.</p>
-      <h5>Types of Events</h5>
-      <p>Below is a table of event types and subtypes to choose from.</p>
+      <p>
+        The calendar is used to schedule screen content for a specific date and time. 
+        Below is a list of possible event types and subtypes.
+      </p>
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light sticky-top shadow-sm">
@@ -41,8 +42,10 @@
     </div>
     <!-- filters -->
     <div class="card p-3 mt-3">
-      <div class="hstack gap-2">
+      <div class="hstack gap-2 small align-items-center">
         <!-- TODO: add filters -->
+        <!-- mdi filter icon-->
+        <Filter class="cursor-pointer" />&nbsp;Filters
         <select class="form-select form-select-sm text-capitalize" v-model="filters.events.type">
           <option value="">Event Type</option>
           <option v-for="t in eventTypes.sort()" :key="t" :value="t">{{ t }}</option>
@@ -50,11 +53,13 @@
         <select :disabled="filters.events.type.length === 0" class="form-select form-select-sm text-capitalize"
           v-model="filters.events.subtype">
           <option value="">Event Subtype</option>
-
           <option v-for="st in availableSubtypes" :key="st" :value="st">
             {{ st }}
           </option>
         </select>
+        <button :disabled="filters.events.type.length === 0 && filters.events.subtype.length === 0" @click="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+          <FilterOffOutline />
+        </button>
       </div>
     </div>
     <!--  calendar  -->
@@ -87,6 +92,9 @@ import CreateEventModalComponent from '@/components/CreateEventModalComponent.vu
 import { nextTick } from 'vue'
 import { Modal } from 'bootstrap'
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
+import Filter from "vue-material-design-icons/Filter.vue"
+import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue"
+import { store } from "@/common/store"
 
 export default {
   name: 'CalendarView',
@@ -96,7 +104,9 @@ export default {
     EditEventModalComponent,
     CreateEventModalComponent,
 
-    HelpCircleOutline
+    HelpCircleOutline,
+    Filter,
+    FilterOffOutline
   },
 
   data() {
@@ -212,6 +222,10 @@ export default {
       // inject events
       this.allEvents = events // unfiltered copy
       this.calendarOptions.events = events
+    },
+    clearFilters() {
+      this.filters.events.type = ""
+      this.filters.events.subtype = ""
     }
   },
   computed: {
@@ -235,8 +249,7 @@ export default {
       this.initializing = true;
 
       // initializes event data
-      const res = await this.$axios.get(this.$api + 'events?all=1');
-      this.processRawEvents(res.data)
+      this.processRawEvents(store.events);
       // initialize filters
       this.eventTypes = this.calendarOptions.events.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
       this.eventSubtypes = this.calendarOptions.events.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
