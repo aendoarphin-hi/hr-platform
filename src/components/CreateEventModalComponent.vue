@@ -11,20 +11,18 @@
               </strong>
             </div>
           </div>
-
           <!-- help description -->
-
           <div class="modal-body">
+            <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
+              <!-- error message -->
+              <div v-if="error" class="mb-3 p-2 small rounded bg-danger-subtle text-danger-emphasis">
+                {{ error }}
+              </div>
+            </transition>
             <p class="small text-muted">
-              Create a new event by filling in the details below.
+              Create a scheduled event by filling in the details below.
             </p>
-
-            <!-- error message -->
-            <div v-if="error" class="mb-3 p-2 small rounded bg-danger-subtle text-danger-emphasis">
-              {{ error }}
-            </div>
-            <!-- event creatable fields -->
-
+            <!-- event creation fields -->
             <!-- title text -->
             <div class="w-100">
               <input required type="text" class="form-control form-control-sm mb-3" placeholder="Event Title"
@@ -44,17 +42,19 @@
               <select required id="event-create-subtype" :disabled="this.newEvent.type.length === 0"
                 class="form-select form-select-sm text-capitalize" v-model="newEvent.subtype">
                 <option value="">Select Subtype</option>
-                <option class="text-capitalize" v-for="s in filteredSubtypes" :key="s" :value="s">
-                  {{ s }}
+                <option class="text-capitalize" v-for="st in filteredSubtypes" :key="st" :value="st">
+                  {{ st }}
                 </option>
               </select>
             </div>
-
+            <p class="small">Employee events can be tied to a specific employee</p>
             <!-- employee selection if type is employee -->
             <div class="mb-3">
-              <select :disabled="newEvent.type !== 'employee'" required id="event-create-employee" class="form-select form-select-sm" v-model="newEvent.employeeId">
+              <select :disabled="newEvent.type !== 'employee'" required id="event-create-employee"
+                class="form-select form-select-sm" v-model="newEvent.employeeId">
                 <option value="">Select Employee</option>
-                <option v-for="employee in employees" :key="employee.id" :value="employee.id">
+                <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.id"
+                  :value="employee.id">
                   {{ employee.name }}
                 </option>
               </select>
@@ -63,36 +63,44 @@
             <!-- description text -->
             <div class="mb-3">
               <textarea id="event-create-description" class="form-control form-control-sm"
-                style="min-height: 100px; resize: none;"
-                v-model="newEvent.description" placeholder="Event Description"></textarea>
+                style="min-height: 100px; resize: none;" v-model="newEvent.description"
+                placeholder="What is this event about? (optional)"></textarea>
             </div>
-
             <!-- help description -->
-            <p class="small text-muted">
-              Select a date range for the event. Content tied to this event will be visible within this date range.
+            <p class="small text-muted lh-sm mb-0">
+              The start and end date/time of the event will determine how long the content will be visible.
             </p>
-
             <!-- date range -->
             <div class="mb-3 d-flex flex-row flex-wrap gap-2 w-100">
               <div class="col">
                 <label for="event-create-start-date" class="small">Start</label>
-                <input required type="datetime-local" class="form-control form-control-sm" id="event-create-start-date"
-                  v-model="newEvent.start" />
+                <input required type="datetime-local" class="text-uppercase form-control form-control-sm"
+                  id="event-create-start-date" v-model="newEvent.start" />
               </div>
               <div class="col">
                 <label for="event-create-end-date" class="small">End</label>
-                <input type="datetime-local" class="form-control form-control-sm" id="event-create-end-date"
+                <input type="datetime-local" :disabled="newEvent.allDay"
+                  class="text-uppercase form-control form-control-sm" id="event-create-end-date"
                   v-model="newEvent.end" />
               </div>
             </div>
 
             <!-- locations dropdown -->
-            <select id="event-create-location" class="form-select form-select-sm" v-model="newEvent.location">
-              <option value="">Select Location (Leave blank for company-wide)</option>
+            <select id="event-create-location" required :disabled="newEvent.companyWide"
+              class="form-select form-select-sm mb-3" v-model="newEvent.location">
+              <option value="">Select Location</option>
               <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.name">
                 {{ location.name || "Company-wide" }}
               </option>
             </select>
+
+            <span class="hstack gap-2 align-items-center form-control-sm">
+              <label for="event-create-all-day" class="small text-nowrap">All Day Event</label>
+              <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="newEvent.allDay">
+              <label for="event-create-company-wide" class="small text-nowrap">Company-wide Event</label>
+              <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
+                v-model="newEvent.companyWide">
+            </span>
           </div>
 
           <div class="modal-footer p-2">
@@ -113,6 +121,7 @@
 
 <script>
 import { eventTypeMap } from "@/common/constants";
+import { store } from "@/common/store";
 import { Modal } from "bootstrap";
 
 export default {
@@ -128,43 +137,38 @@ export default {
         title: "",
         type: "",
         subtype: "",
+        start: "",
+        end: "",
         description: "", // optional
         location: "", // optional
         employeeId: "", // optional
         contentId: "", // optional
         status: "draft", // optional
-        start: "",
-        end: "",
+        companyWide: false // optional
       },
-      locations: [],
       types: [],
       subtypes: [],
-      employees: [],
       error: ""
     };
   },
 
   async mounted() {
-    this.$refs.modal.addEventListener("hidden.bs.modal", () => {
-      this.cancelChanges();
-    });
-
-    // remove focus from any input fields; fix for aria warning after modal close
-    const modal = document.getElementById('create-event-modal');
-    modal.addEventListener('hide.bs.modal', () => {
-      document.activeElement?.blur();
-    });
-
     try {
-      // fetch all locations
-      const l = (await this.$axios.get(this.$api + 'locations?all=1')).data;
-      this.locations = l;
+      this.$refs.modal.addEventListener("hidden.bs.modal", () => {
+        this.cancelChanges();
+      });
       // fetch all available event types and subtypes
-      const e = (await this.$axios.get(this.$api + 'events?all=1')).data;
+      const e = store.events
       this.types = e.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
       this.subtypes = e.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
-    } catch (e) {
-      console.log(e.message);
+
+      // remove focus from any input fields; FIX for aria warning after modal close
+      const modal = document.getElementById('create-event-modal');
+      modal.addEventListener('hide.bs.modal', () => {
+        document.activeElement?.blur();
+      });
+    } catch (error) {
+      console.log(error);
     }
   },
 
@@ -178,6 +182,12 @@ export default {
       }
       return this.subtypes;
     },
+    locations() {
+      return store.locations;
+    },
+    employees() {
+      return store.employees;
+    }
   },
 
   methods: {
@@ -196,15 +206,21 @@ export default {
       };
     },
     async createEvent() {
-      window.alert(JSON.stringify(this.newEvent, null, 2));
-      // try {
-      //   // post to php backend
-      //   const res = await this.$axios.post("events", this.newEvent);
-      //   Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
-      //   this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
-      // } catch (error) {
-      //   this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");
-      // }
+      try {
+        if (this.newEvent.allDay) {
+          window.alert("all day");
+          this.newEvent.start = this.newEvent.start.split('T')[0] + ' 00:00:00';
+          this.newEvent.end = this.newEvent.start.split(' ')[0] + ' 23:59:59';
+        }
+        if (this.newEvent.companyWide) this.newEvent.location = "";
+        // // post to php backend
+        // const res = await this.$axios.post("events", this.newEvent);
+        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
+        this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
+        window.alert(JSON.stringify(this.newEvent, null, 2));
+      } catch (error) {
+        this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");
+      }
     },
     formatDateTimeLocal(value) {
       if (!value) return "";
@@ -219,6 +235,11 @@ export default {
     },
   },
   watch: {
+    'newEvent.type': {
+      handler() {
+        this.newEvent.subtype = '';
+      },
+    },
     newEvent: {
       handler(newVal) {
         if (newVal.start && newVal.end && new Date(newVal.start) > new Date(newVal.end)) {
