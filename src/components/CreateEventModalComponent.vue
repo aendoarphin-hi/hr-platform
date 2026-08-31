@@ -51,7 +51,7 @@
             <!-- employee selection if type is employee -->
             <div class="mb-3">
               <select :disabled="newEvent.type !== 'employee'" required id="event-create-employee"
-                class="form-select form-select-sm" v-model="newEvent.employeeId">
+                class="form-select form-select-sm" v-model="newEvent.employeeNum">
                 <option value="">Select Employee</option>
                 <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.id"
                   :value="employee.id">
@@ -87,10 +87,10 @@
 
             <!-- locations dropdown -->
             <select id="event-create-location" required :disabled="newEvent.companyWide"
-              class="form-select form-select-sm mb-3" v-model="newEvent.location">
+              class="form-select form-select-sm mb-3" v-model="newEvent.locationId">
               <option value="">Select Location</option>
-              <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.name">
-                {{ location.name || "Company-wide" }}
+              <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
+                {{ location.name }}
               </option>
             </select>
 
@@ -104,7 +104,7 @@
           </div>
 
           <div class="modal-footer p-2">
-            <button type="reset" class="btn btn-sm btn-danger me-2" data-bs-dismiss="modal" @click="cancelChanges"
+            <button type="reset" class="btn btn-sm btn-danger me-2" data-bs-dismiss="modal" @click="clearChanges"
               title="Cancel">
               Cancel
             </button>
@@ -140,10 +140,9 @@ export default {
         start: "",
         end: "",
         description: "", // optional
-        location: "", // optional
-        employeeId: "", // optional
-        contentId: "", // optional
-        status: "draft", // optional
+        locationId: null, // optional
+        employeeNum: null, // optional
+        contentId: null, // optional
         companyWide: false // optional
       },
       types: [],
@@ -155,7 +154,7 @@ export default {
   async mounted() {
     try {
       this.$refs.modal.addEventListener("hidden.bs.modal", () => {
-        this.cancelChanges();
+        this.clearChanges();
       });
       // fetch all available event types and subtypes
       const e = store.events
@@ -183,7 +182,7 @@ export default {
       return this.subtypes;
     },
     locations() {
-      return store.locations;
+      return [...store.locations]
     },
     employees() {
       return store.employees;
@@ -191,35 +190,41 @@ export default {
   },
 
   methods: {
-    cancelChanges() {
+    clearChanges() {
       this.newEvent = {
         title: "",
         type: "",
         subtype: "",
-        description: "", // optional
-        location: "", // optional
-        employeeId: "", // optional
-        contentId: "", // optional
-        status: "draft", // optional
         start: "",
         end: "",
+        description: "", // optional
+        locationId: null, // optional
+        employeeNum: null, // optional
+        contentId: null, // optional
+        companyWide: false // optional
       };
     },
     async createEvent() {
-      try {
+      try { // continue her and test the post
+        // is it one-day?
         if (this.newEvent.allDay) {
-          window.alert("all day");
-          this.newEvent.start = this.newEvent.start.split('T')[0] + ' 00:00:00';
-          this.newEvent.end = this.newEvent.start.split(' ')[0] + ' 23:59:59';
+          this.newEvent.start = this.newEvent.start.split('T')[0] + ' 00:00';
+          this.newEvent.end = this.newEvent.start.split(' ')[0] + ' 23:59';
         }
-        if (this.newEvent.companyWide) this.newEvent.location = "";
-        // // post to php backend
-        // const res = await this.$axios.post("events", this.newEvent);
-        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
+        // is it company-wide?
+        if (this.newEvent.companyWide) this.newEvent.locationId = null;
+        // format for mysql datetime
+        this.newEvent.start = this.newEvent.start.replace('T', ' ') + ':00'
+        this.newEvent.end = this.newEvent.end.replace('T', ' ') + ':00'
+        // post
+        // const res = await this.$axios.post(this.$api + "events", this.newEvent);
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
-        window.alert(JSON.stringify(this.newEvent, null, 2));
+        console.log(this.newEvent);
       } catch (error) {
         this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");
+      } finally {
+        this.clearChanges();
+        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
       }
     },
     formatDateTimeLocal(value) {
