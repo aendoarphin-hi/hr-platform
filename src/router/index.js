@@ -70,6 +70,12 @@ const routes = [
     active: false,
   },
   {
+    path: "/test",
+    name: "Test",
+    component: () => import("../views/TestView.vue"),
+    active: false,
+  },
+  {
     path: "/:pathMatch(.*)*",
     redirect: { name: "Dashboard" },
   },
