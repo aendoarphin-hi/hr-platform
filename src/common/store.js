@@ -3,10 +3,11 @@ import { reactive } from "vue";
 export let store = reactive({ // eslint-disable-line
   authenticated: false,
   events: [],
-  employees: [], // excludes OPTED OUT employees
+  employees: [],
   screens: [],
   playlists: [],
   content: [],
   approvals: [],
   activity: [],
+  locations: [],
 });
