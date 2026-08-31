@@ -159,7 +159,7 @@
                     </template>
                   </th>
                   <th scope="col">Playlist</th>
-                  <th class="text-end" scope="col">Actions</th>
+                  <th class="text-end" scope="col">&nbsp;</th>
                 </tr>
               </thead>
               <tbody>
@@ -280,7 +280,7 @@
                       <TriangleSmallDown v-else />
                     </template>
                   </th>
-                  <th class="text-end" scope="col">Actions</th>
+                  <th class="text-end" scope="col">&nbsp;</th>
                 </tr>
               </thead>
               <tbody>
