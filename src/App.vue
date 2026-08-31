@@ -59,6 +59,7 @@ export default {
       store.approvals = (await this.$axios.get(this.$api + "approvals?all=1")).data
       store.activity = (await this.$axios.get(this.$api + "activity?all=1")).data
       store.employees = (await this.$axios.get(this.$api + "employees?all=1")).data
+      store.locations = (await this.$axios.get(this.$api + "locations?all=1")).data
     } catch (error) {
       if (error.response.status === 401) {
         this.$router.push({ name: "Auth" });
