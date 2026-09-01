@@ -150,9 +150,6 @@ export default {
       error: ""
     };
   },
-
-  emits: ['eventCreated'],
-
   async mounted() {
     try {
       this.$refs.modal.addEventListener("hidden.bs.modal", () => {
@@ -226,7 +223,6 @@ export default {
         await this.$axios.post(this.$api + "events", this.newEvent);
         // refresh the store
         store.events = (await this.$axios.get(this.$api + "events?all=1")).data;
-        this.$emit('eventCreated')
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
         console.log(this.newEvent);
       } catch (error) {

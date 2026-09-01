@@ -16,7 +16,9 @@
                 {{ formatLabel(currentEvent.extendedProps.subtype) }}
               </div>
               <small class="text-muted">
-                <span v-if="currentEvent.extendedProps.location"><MapMarker /> {{ currentEvent.extendedProps.location }}&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>
+                <span v-if="currentEvent.extendedProps.location">
+                  <MapMarker /> {{ currentEvent.extendedProps.location }}&nbsp;&nbsp;&middot;&nbsp;&nbsp;
+                </span>
                 <CalendarRangeOutline />&nbsp;
                 <span v-if="currentEvent.allDay">{{ formatDate(currentEvent.start) }}</span>
                 <span v-else>{{ formatDate(currentEvent.start) }} - {{ formatDate(currentEvent.end) }}</span>
@@ -56,19 +58,25 @@
           </select>
         </div>
 
-        <div class="modal-footer p-2">
+        <div v-if="confirmDelete" class="modal-footer p-2">
+          <p class="px-2 me-auto btn btn-sm bg-danger-subtle text-danger-emphasis rounded">Are you sure you want to
+            delete this event?</p>
+          <button class="btn btn-sm btn-danger me-2" @click="confirmDelete = false">No</button>
+          <button class="btn btn-sm btn-success" @click="deleteEvent();">Yes</button>
+        </div>
+        <div v-else class="modal-footer p-2">
           <button data-bs-dismiss="modal" v-if="!editing" class="btn btn-sm btn-secondary me-2"
             title="Close">Close</button>
-
+          <button class="btn btn-sm btn-danger me-2" @click="confirmDelete = true" title="Delete">
+            Delete
+          </button>
           <button v-if="editing" class="btn btn-sm btn-danger me-2" @click="revertChanges" title="Discard">
             Discard
           </button>
-
           <button v-if="!editing" class="btn btn-sm btn-primary me-2" :disabled="editing" @click="startEditing"
             title="Edit event">
             <Pencil />&nbsp;Edit
           </button>
-
           <button v-if="editing" @click="saveChanges" :disabled="!hasChanges" class="btn btn-sm btn-success"
             title="Save changes">
             <Floppy />&nbsp;Save
@@ -85,9 +93,7 @@ import Floppy from "vue-material-design-icons/Floppy.vue";
 import CalendarRangeOutline from "vue-material-design-icons/CalendarRangeOutline.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
 
-
 export default {
-  emits: ["closeEditModal"],
   components: {
     Pencil,
     Floppy,
@@ -97,7 +103,6 @@ export default {
   props: {
     event: Object,
   },
-
   data() {
     return {
       detailView: false,
@@ -108,6 +113,7 @@ export default {
       currentEvent: this.event,
       locations: [],
       changes: [], // if event was updated
+      confirmDelete: false
     };
   },
 
@@ -115,7 +121,6 @@ export default {
     this.$refs.modal.addEventListener("hidden.bs.modal", () => {
       this.editing = false;
       this.changes = [];
-      this.$emit("closeEditModal");
     });
 
     // remove focus from any input fields; fix for aria warning after modal close
@@ -126,7 +131,7 @@ export default {
 
     // fetch all available locations for the location select dropdown
     const res = (await this.$axios.get(this.$api + 'locations?all=1')).data;
-    this.locations = res; // TODO: create distinct query endpoint for this
+    this.locations = res;
   },
 
   watch: {
@@ -174,6 +179,20 @@ export default {
     },
     saveChanges() {
       window.alert("TODO: PUT req to update record.");
+    },
+    async deleteEvent() {
+      try { // TODO: add log inserts
+        await this.$axios.post(this.$api + "events" + this.currentEvent.id, {
+          data: {
+            id: this.currentEvent.id,
+            action: "delete"
+          }
+        });
+        this.confirmDelete = false;
+        this.$router.go();
+      } catch (error) {
+        console.error(error);
+      }
     },
     startEditing() {
       this.editStart = this.currentEvent?.start ? this.formatDateTimeLocal(this.currentEvent.start) : "";
