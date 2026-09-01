@@ -51,7 +51,7 @@
             <!-- employee selection if type is employee -->
             <div class="mb-3">
               <select :disabled="newEvent.type !== 'employee'" required id="event-create-employee"
-                class="form-select form-select-sm" v-model="newEvent.employeeNum">
+                class="form-select form-select-sm" v-model="newEvent.employee_num">
                 <option value="">Select Employee</option>
                 <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.id"
                   :value="employee.id">
@@ -87,7 +87,7 @@
 
             <!-- locations dropdown -->
             <select id="event-create-location" required :disabled="newEvent.companyWide"
-              class="form-select form-select-sm mb-3" v-model="newEvent.locationId">
+              class="form-select form-select-sm mb-3" v-model="newEvent.location_id">
               <option value="">Select Location</option>
               <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
                 {{ location.name }}
@@ -140,9 +140,9 @@ export default {
         start: "",
         end: "",
         description: "", // optional
-        locationId: null, // optional
-        employeeNum: null, // optional
-        contentId: null, // optional
+        location_id: null, // optional
+        employee_num: null, // optional
+        content_id: null, // optional
         companyWide: false // optional
       },
       types: [],
@@ -150,6 +150,8 @@ export default {
       error: ""
     };
   },
+
+  emits: ['eventCreated'],
 
   async mounted() {
     try {
@@ -198,26 +200,33 @@ export default {
         start: "",
         end: "",
         description: "", // optional
-        locationId: null, // optional
-        employeeNum: null, // optional
-        contentId: null, // optional
+        location_id: null, // optional
+        employee_num: null, // optional
+        content_id: null, // optional
         companyWide: false // optional
       };
     },
     async createEvent() {
-      try { // continue her and test the post
+      try {
         // is it one-day?
         if (this.newEvent.allDay) {
           this.newEvent.start = this.newEvent.start.split('T')[0] + ' 00:00';
           this.newEvent.end = this.newEvent.start.split(' ')[0] + ' 23:59';
         }
         // is it company-wide?
-        if (this.newEvent.companyWide) this.newEvent.locationId = null;
+        if (this.newEvent.companyWide) this.newEvent.location_id = null;
         // format for mysql datetime
         this.newEvent.start = this.newEvent.start.replace('T', ' ') + ':00'
         this.newEvent.end = this.newEvent.end.replace('T', ' ') + ':00'
+        // parse any ids to int
+        this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
+        this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
+        this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         // post
-        // const res = await this.$axios.post(this.$api + "events", this.newEvent);
+        await this.$axios.post(this.$api + "events", this.newEvent);
+        // refresh the store
+        store.events = (await this.$axios.get(this.$api + "events?all=1")).data;
+        this.$emit('eventCreated')
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
         console.log(this.newEvent);
       } catch (error) {
