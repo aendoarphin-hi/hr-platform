@@ -34,7 +34,8 @@
 
     <!--  KPI stat cards  -->
     <div class="row g-3 mb-4">
-      <RouterLink v-for="s in quickStats" :key="s.title" :to="{ name: 'Screens', query: { tab: s.title } }"
+      <RouterLink v-for="s in quickStats" :key="s.title" 
+      :to="s.title === 'approvals' ? 'approvals' : { name: 'Screens', query: { tab: s.title } }"
         class="col-12 col-md-6 col-lg-3 text-decoration-none">
         <div class="card shadow-sm border border-0 hstack h-100">
           <div class="card-body hstack align-items-start">
