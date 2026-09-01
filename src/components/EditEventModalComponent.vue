@@ -16,8 +16,8 @@
                 {{ formatLabel(currentEvent.extendedProps.subtype) }}
               </div>
               <small class="text-muted">
-                <MapMarker /> {{ currentEvent.extendedProps.location || "N/A" }} &middot;
-                <CalendarRangeOutline />
+                <span v-if="currentEvent.extendedProps.location"><MapMarker /> {{ currentEvent.extendedProps.location }}&nbsp;&nbsp;&middot;&nbsp;&nbsp;</span>
+                <CalendarRangeOutline />&nbsp;
                 <span v-if="currentEvent.allDay">{{ formatDate(currentEvent.start) }}</span>
                 <span v-else>{{ formatDate(currentEvent.start) }} - {{ formatDate(currentEvent.end) }}</span>
               </small>
