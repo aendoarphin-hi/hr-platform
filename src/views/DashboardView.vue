@@ -22,7 +22,7 @@
       </div>
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
-        <button class="btn btn-sm btn-success" @click="open">+ Create Announcement</button>
+        <button class="btn btn-sm btn-success" @click="openCreateModal">+ Create Announcement</button>
         <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
         </button>
@@ -34,8 +34,8 @@
 
     <!--  KPI stat cards  -->
     <div class="row g-3 mb-4">
-      <RouterLink v-for="s in quickStats" :key="s.title" 
-      :to="s.title === 'approvals' ? 'approvals' : { name: 'Screens', query: { tab: s.title } }"
+      <RouterLink v-for="s in quickStats" :key="s.title"
+        :to="s.title === 'approvals' ? 'approvals' : { name: 'Screens', query: { tab: s.title } }"
         class="col-12 col-md-6 col-lg-3 text-decoration-none">
         <div class="card shadow-sm border border-0 hstack h-100">
           <div class="card-body hstack align-items-start">
@@ -81,15 +81,16 @@
               </span>
               Upcoming Announcements
             </h6>
-            <router-link to="/calendar?filter=announcements" class="small link-primary text-decoration-none">Manage
+            <router-link :to="{ name: 'Calendar', query: { type: 'announcement' } }"
+              class="small link-primary text-decoration-none">Manage
               Announcements
               &nbsp;▸</router-link>
           </div>
-          <ul class="list-group list-group-flush">
-            <li v-for="(a, i) in upcomingAnnouncements" :key="i"
-              class="list-group-item d-flex align-items-center gap-3">
+          <ul v-if="upcomingAnnouncements.length" class="list-group list-group-flush">
+            <li v-for="(a, i) in upcomingAnnouncements" :key="i" class="list-group-item d-flex align-items-center gap-3"
+              :class="i === 0 ? 'fs-5 fw-semibold border-4' : 'small'">
               <div class="flex-grow-1 min-w-0">
-                <div class="fw-semibold text-truncate">{{ a.title }}</div>
+                <div class="fw-semibold text-truncate text-uppercase">{{ a.title }}</div>
                 <div class="text-muted small">
                   <span v-if="a.location" class="text-capitalize me-2">
                     <MapMarker /> {{ a.location }}
@@ -104,6 +105,9 @@
               </span>
             </li>
           </ul>
+          <div v-else class="card-body my-5 d-flex align-items-center justify-content-center text-muted">
+            <small>Nothing Scheduled</small>
+          </div>
         </div>
 
         <!--  Recent uploads (media posts)  -->
@@ -128,22 +132,16 @@
                       📄
                     </div>
                     <div class="min-w-0">
-                      <div class="fw-semibold text-truncate">{{ u.title }}</div>
+                      <div class="fw-semibold text-truncate text-uppercase">{{ u.title }}</div>
                       <div class="text-muted small">{{ u.filename }} &middot; {{ new Date(u.created_at).toDateString()
                       }}</div>
                     </div>
                   </div>
                 </div>
               </template>
-              <template v-else>
-                <div class="timeline-item">
-                  <div class="timeline-content p-3">
-                    <div class="text-center">
-                      <span class="fw-semibold text-muted">No recent uploads</span>
-                    </div>
-                  </div>
-                </div>
-              </template>
+              <div v-else class="card-body my-5 d-flex align-items-center justify-content-center text-muted">
+                <small>No Recent Uploads</small>
+              </div>
             </div>
           </div>
         </div>
@@ -165,7 +163,8 @@
             <router-link to="/calendar" class="small link-primary text-decoration-none">View Calendar
               &nbsp;▸</router-link>
           </div>
-          <ul class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto">
+          <ul v-if="employeeEvents.length" class="list-group list-group-flush"
+            style="max-height: 400px; overflow-y: auto">
             <li v-for="(e, i) in employeeEvents" :key="i" class="list-group-item small d-flex align-items-center gap-2">
               <div class="fs-5">
                 <span v-if="e.subtype === 'birthday'">🎂</span>
@@ -174,13 +173,16 @@
                 <span v-else-if="e.subtype === 'new hire'">💼</span>
               </div>&nbsp;
               <div class="d-flex flex-column text-capitalize">
-                <div class="fw-semibold">{{ e.title }}</div>
+                <div class="fw-semibold text-uppercase">{{ e.title }}</div>
                 <div class="text-muted text-nowrap me-1 small">
                   {{ new Date(e.start).toDateString() }}
                 </div>
               </div>
             </li>
           </ul>
+          <div v-else class="card-body my-5 d-flex align-items-center justify-content-center text-muted">
+            <small>No Employee Events</small>
+          </div>
         </div>
 
         <!--  recent activity  -->
@@ -194,12 +196,12 @@
             </h6>
           </div>
           <div class="timeline">
-            <template v-if="recentActivity.length > 0">
+            <div v-if="recentActivity.length">
               <div v-for="a in recentActivity" :key="a.id" class="timeline-item">
                 <div class="timeline-content p-3">
                   <div class="d-flex align-items-center gap-2">
                     <span
-                      class="activity-avatar rounded-circle d-flex align-items-center justify-content-center flex-shrink-0">
+                      class="activity-avatar rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 text-uppercase">
                       {{ a.name[0] }}
                     </span>
                     <div class="lh-sm small">
@@ -209,16 +211,10 @@
                   </div>
                 </div>
               </div>
-            </template>
-            <template v-else>
-              <div class="timeline-item">
-                <div class="timeline-content p-3">
-                  <div class="text-center">
-                    <span class="fw-semibold text-muted">No recent activity</span>
-                  </div>
-                </div>
-              </div>
-            </template>
+            </div>
+            <div v-else class="card-body my-5 d-flex align-items-center justify-content-center text-muted">
+              <small>No Recent Activity</small>
+            </div>
           </div>
         </div>
 
@@ -238,6 +234,7 @@
 
       </div>
     </div>
+    <CreateEventModalComponent :preset="announcementPreset" />
   </div>
   <div v-else class="d-flex justify-content-center align-items-center">
     <LoadingComponent message="Loading dashboard..." />
@@ -261,9 +258,13 @@ import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import Calendar from "vue-material-design-icons/Calendar.vue";
 import ExclamationThick from "vue-material-design-icons/ExclamationThick.vue";
 
+import CreateEventModalComponent from "../components/CreateEventModalComponent.vue";
+import LoadingComponent from "../components/LoadingComponent.vue";
+
 import { markRaw } from "vue";
 import { store } from "@/common/store";
 import { formatTimeAgo } from "@/common/helpers";
+import { Modal } from "bootstrap";
 
 export default {
   name: "DashboardView",
@@ -283,6 +284,9 @@ export default {
     FileDocument,
     Calendar,
     ExclamationThick,
+
+    CreateEventModalComponent,
+    LoadingComponent,
   },
 
   data() {
@@ -290,9 +294,19 @@ export default {
       loading: false,
       quickStats: [],
       needsAttention: [],
+      announcementPreset: {}, // prefill values for announcement
     };
   },
   methods: {
+    openCreateModal() {
+      this.announcementPreset = {
+        type: "announcement",
+        status: "general",
+      };
+      Modal.getOrCreateInstance(
+        document.getElementById("create-event-modal")
+      ).show();
+    },
     formatTimeAgo,
     setValue() {
       store.authenticated = false;
@@ -436,26 +450,21 @@ export default {
         };
       }).slice(0, 5).sort((a, b) => new Date(b.date) - new Date(a.date));
     },
-    employeeEvents() {
-      return this.events.filter((event) => event.type === "employee").slice(0, 3);
+    employeeEvents() { // sort by event start date where the upcoming one is first, dont include past events
+      return this.events.filter((event) => event.type === "employee" && new Date(event.start) >= new Date())
+        .sort((a, b) => new Date(a.start) - new Date(b.start)).slice(0, 3);
     },
     upcomingAnnouncements() {
       return this.events
-        .filter((event) => event.type === "announcement" && event.subtype !== "weather")
+        .filter((event) => event.type === "announcement" && event.subtype !== "weather" && new Date(event.start) >= new Date())
         .sort((a, b) => new Date(a.start) - new Date(b.start))
         .slice(0, 5);
     },
   },
   async mounted() {
+    console.log(store)
     try {
       this.loading = true;
-      // this.events = store.events;
-      // this.screens = store.screens;
-      // this.playlists = store.playlists;
-      // this.content = store.content;
-      // this.approvals = store.approvals;
-      // this.activity = store.activity;
-      // this.employees = store.employees;
 
       this.quickStats = [
         {

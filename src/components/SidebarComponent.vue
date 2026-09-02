@@ -24,11 +24,11 @@
       </li>
     </ul>
     <hr />
-    <div id="sidebar-footer">
+    <div id="sidebar-footer" class="d-flex flex-nowrap">
       <router-link v-if="user" to="/profile" class="text-decoration-none">
         <small class="bg-primary fw-semibold p-1 rounded-circle text-white w-50">
           {{ (user.first[0] + user.last[0]) || user.name[0] }}
-        </small>&nbsp;&nbsp;<span>{{ user.name }}</span>
+        </small>&nbsp;&nbsp;<span class="text-nowrap">{{ user.name }}</span>
       </router-link>
       <a v-else href="http://10.10.8.156" class="text-decoration-none">
         <AccountCircle />&nbsp;&nbsp;<span>Sign In</span>

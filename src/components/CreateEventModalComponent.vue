@@ -42,7 +42,7 @@
               <select required id="event-create-subtype" :disabled="this.newEvent.type.length === 0"
                 class="form-select form-select-sm text-capitalize" v-model="newEvent.subtype">
                 <option value="">Select Subtype</option>
-                <option class="text-capitalize" v-for="st in filteredSubtypes" :key="st" :value="st">
+                <option class="text-capitalize" v-for="st in subtypes" :key="st" :value="st">
                   {{ st }}
                 </option>
               </select>
@@ -88,7 +88,7 @@
             <!-- locations dropdown -->
             <select id="event-create-location" required :disabled="newEvent.companyWide"
               class="form-select form-select-sm mb-3" v-model="newEvent.location_id">
-              <option value="">Select Location</option>
+              <option :value="null">Select Location</option>
               <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
                 {{ location.name }}
               </option>
@@ -120,7 +120,7 @@
 </template>
 
 <script>
-import { eventTypeMap } from "@/common/constants";
+import { eventTypes } from "@/common/constants";
 import { store } from "@/common/store";
 import { Modal } from "bootstrap";
 
@@ -145,8 +145,6 @@ export default {
         content_id: null, // optional
         companyWide: false // optional
       },
-      types: [],
-      subtypes: [],
       error: ""
     };
   },
@@ -155,10 +153,6 @@ export default {
       this.$refs.modal.addEventListener("hidden.bs.modal", () => {
         this.clearChanges();
       });
-      // fetch all available event types and subtypes
-      const e = store.events
-      this.types = e.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
-      this.subtypes = e.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
 
       // remove focus from any input fields; FIX for aria warning after modal close
       const modal = document.getElementById('create-event-modal');
@@ -171,14 +165,14 @@ export default {
   },
 
   computed: {
+    types() {
+      return Object.keys(eventTypes);
+    },
+    subtypes() {
+      return eventTypes[this.newEvent.type] ?? [];
+    },
     canSave() {
       return Boolean(this.newEvent.start && this.newEvent.title && this.newEvent.type && this.newEvent.subtype);
-    },
-    filteredSubtypes() { // enable subtype when type is selected
-      if (this.newEvent.type && eventTypeMap[this.newEvent.type]) {
-        return this.subtypes.filter((s) => eventTypeMap[this.newEvent.type].includes(s));
-      }
-      return this.subtypes;
     },
     locations() {
       return [...store.locations]
@@ -220,11 +214,10 @@ export default {
         this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         // post
-        await this.$axios.post(this.$api + "events", this.newEvent);
+        await this.$axios.post(this.$api + "events?new", this.newEvent);
         // refresh the store
         store.events = (await this.$axios.get(this.$api + "events?all=1")).data;
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
-        console.log(this.newEvent);
       } catch (error) {
         this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");
       } finally {
@@ -253,7 +246,7 @@ export default {
     newEvent: {
       handler(newVal) {
         if (newVal.start && newVal.end && new Date(newVal.start) > new Date(newVal.end)) {
-          this.newEvent.start = ''; this.newEvent.end = ''; this.error = "Dates cannot overlap";
+          this.newEvent.end = ''; this.error = "Dates cannot overlap";
         }
       },
       deep: true,

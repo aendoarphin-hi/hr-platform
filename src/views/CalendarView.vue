@@ -3,7 +3,7 @@
     <!-- help modal -->
     <HelpModalComponent>
       <p>
-        The calendar is used to schedule screen content for a specific date and time. 
+        The calendar is used to schedule screen content for a specific date and time.
         Below is a list of possible event types and subtypes.
       </p>
       <div class="table-responsive">
@@ -15,9 +15,9 @@
             </tr>
           </thead>
           <tbody class="table-group-divider text-capitalize">
-            <tr v-for="t in eventTypes" :key="t">
+            <tr v-for="t in typeFilters" :key="t">
               <td>{{ t }}</td>
-              <td>{{eventSubtypes.filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.type ===
+              <td>{{[...subtypeFilters].filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.type ===
                 t)).join(', ')}}</td>
             </tr>
           </tbody>
@@ -47,24 +47,25 @@
         <!-- mdi filter icon-->
         <Filter class="cursor-pointer" />&nbsp;Filters
         <select class="form-select form-select-sm text-capitalize" v-model="filters.events.type">
-          <option value="">Event Type</option>
-          <option v-for="t in eventTypes.sort()" :key="t" :value="t">{{ t }}</option>
+          <option value="">All Types</option>
+          <option v-for="t in typeFilters" :key="t" :value="t">{{ t }}</option>
         </select>
         <select :disabled="filters.events.type.length === 0" class="form-select form-select-sm text-capitalize"
           v-model="filters.events.subtype">
-          <option value="">Event Subtype</option>
+          <option value="">All Subtypes</option>
           <option v-for="st in availableSubtypes" :key="st" :value="st">
             {{ st }}
           </option>
         </select>
-        <button :disabled="filters.events.type.length === 0 && filters.events.subtype.length === 0" @click="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
+        <button :disabled="filters.events.type.length === 0 && filters.events.subtype.length === 0"
+          @click="clearFilters" class="btn btn-outline-secondary btn-sm" title="Clear Filters">
           <FilterOffOutline />
         </button>
       </div>
     </div>
     <!--  calendar  -->
     <div id="calendar-container" class="card p-3 mt-3">
-      <FullCalendar :options="calendarOptions" />
+      <FullCalendar ref="calendar" :options="calendarOptions" />
     </div>
     <!--  modals  -->
     <EditEventModalComponent :event="selectedEvent" />
@@ -95,6 +96,7 @@ import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 import Filter from "vue-material-design-icons/Filter.vue"
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue"
 import { store } from "@/common/store"
+import { eventTypes } from '@/common/constants'
 
 export default {
   name: 'CalendarView',
@@ -111,18 +113,9 @@ export default {
 
   data() {
     return {
-      selectedEvent: {
-        title: "New Event",
-        start: new Date().toISOString().slice(0, 16),
-        end: new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16),
-        allDay: false,
-        extendedProps: {
-          type: "",
-          subtype: "",
-          location: "",
-          description: ""
-        }
-      },
+      selectedEvent: {},
+      typeFilters: [],
+      subtypeFilters: [],
       subtypeColors: {
         // employee
         birthday: '#D9B84C',
@@ -144,8 +137,9 @@ export default {
         weather: '#0dcaf0'
       },
       initializing: false,
+      initDate: new Date(), // used to persist calendar page
       calendarOptions: {
-        plugins: [
+        plugins: [ // available calendar views
           themePlugin,
           dayGridPlugin,
           timeGridPlugin,
@@ -171,7 +165,8 @@ export default {
         height: "100%",
         events: [],
         eventClick: (info) => {
-          this.selectedEvent = info.event
+          this.selectedEvent = { ...info.event.extendedProps, start: info.event.start, end: info.event.end }
+          this.initDate = info.event.start
           nextTick(() => {
             Modal.getOrCreateInstance(
               document.getElementById('edit-event-modal')
@@ -179,12 +174,10 @@ export default {
           })
         },
       },
-      eventTypes: [],
-      eventSubtypes: [],
       allEvents: [],
       filters: {
         events: {
-          type: "",
+          type: this.$route.query.type ?? "",
           subtype: ""
         }
       }
@@ -219,6 +212,16 @@ export default {
         // color code by event type
         e.color = this.subtypeColors[e.subtype] ?? 'gray'
       })
+      if (this.initDate) { // persist calendar page
+        this.calendarOptions.initialDate = this.initDate
+      }
+      // check for currently toggled filters
+      if (this.filters.events.type.length > 0) {
+        events = events.filter(e => e.type === this.filters.events.type)
+      }
+      if (this.filters.events.subtype.length > 0) {
+        events = events.filter(e => e.subtype === this.filters.events.subtype)
+      }
       // inject events
       this.allEvents = events // unfiltered copy
       this.calendarOptions.events = events
@@ -226,40 +229,45 @@ export default {
     clearFilters() {
       this.filters.events.type = ""
       this.filters.events.subtype = ""
-    }
+      this.$refs.calendar.getApi().gotoDate(new Date())
+    },
   },
   computed: {
     availableSubtypes() {
-      if (this.filters.events.type === "") {
-        return [...this.eventSubtypes].sort()
-      }
-
-      return this.eventSubtypes
-        .filter(subtype =>
-          this.allEvents.some(event =>
-            event.type === this.filters.events.type &&
-            event.subtype === subtype
-          )
-        )
-        .sort()
-    }
+      const { type } = this.filters.events
+      return Object.values(eventTypes[type] ?? [])
+    },
+    storeEvents() {
+      return store.events
+    },
   },
   async mounted() {
     try {
       this.initializing = true;
-
+      this.typeFilters = Object.keys(eventTypes);
+      this.subtypeFilters = Object.values(eventTypes).flat();
       // initializes event data
       this.processRawEvents(store.events);
-      // initialize filters
-      this.eventTypes = this.calendarOptions.events.map((e) => e.type).filter((v, i, a) => a.indexOf(v) === i);
-      this.eventSubtypes = this.calendarOptions.events.map((e) => e.subtype).filter((v, i, a) => a.indexOf(v) === i);
-
+      // filters
       this.initializing = false;
     } catch (e) {
       console.log(e.message);
     }
   },
   watch: {
+    storeEvents: {
+
+      handler(newEvents) {
+        this.processRawEvents([...newEvents])
+        this.typeFilters = [
+          ...new Set(newEvents.map(e => e.type))
+        ]
+        this.subtypeFilters = [
+          ...new Set(newEvents.map(e => e.subtype))
+        ]
+      },
+      deep: true
+    },
     'filters.events.type': {
       handler() {
         this.filters.events.subtype = ""
@@ -268,13 +276,13 @@ export default {
     'filters.events': {
       handler() {
         const { type, subtype } = this.filters.events
-
         this.calendarOptions.events = this.allEvents.filter(e => {
           const typeMatch = type === "" || e.type === type
           const subtypeMatch = subtype === "" || e.subtype === subtype
 
           return typeMatch && subtypeMatch
         })
+        store.events = [...store.events] // 
       },
       deep: true
     }

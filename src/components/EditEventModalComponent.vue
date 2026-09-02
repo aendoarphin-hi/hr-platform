@@ -11,13 +11,13 @@
             </strong>
             <div class="d-flex flex-row gap-2 align-items-center">
               <div class="badge rounded-pill text-capitalize" style="width: min-content;"
-                :class="badgeClass(currentEvent.extendedProps.type)">
-                {{ formatLabel(currentEvent.extendedProps.type) }} |
-                {{ formatLabel(currentEvent.extendedProps.subtype) }}
+                :class="badgeClass(currentEvent.type)">
+                {{ formatLabel(currentEvent.type) }} |
+                {{ formatLabel(currentEvent.subtype) }}
               </div>
               <small class="text-muted">
-                <span v-if="currentEvent.extendedProps.location">
-                  <MapMarker /> {{ currentEvent.extendedProps.location }}&nbsp;&nbsp;&middot;&nbsp;&nbsp;
+                <span v-if="currentEvent.location">
+                  <MapMarker /> {{ currentEvent.location }}&nbsp;&nbsp;&middot;&nbsp;&nbsp;
                 </span>
                 <CalendarRangeOutline />&nbsp;
                 <span v-if="currentEvent.allDay">{{ formatDate(currentEvent.start) }}</span>
@@ -26,34 +26,34 @@
             </div>
           </div>
         </div>
-
+        <!-- edit mode body -->
         <div class="modal-body">
           <!-- event description -->
           <p>
-            {{ currentEvent.extendedProps.description || "No description provided." }}
+            {{ currentEvent.description || "No description provided." }}
           </p>
           <!-- event editable fields -->
-          <div v-if="editing" class="mb-2 d-flex flex-row gap-2 w-100">
+          <div class="mb-2 d-flex flex-row gap-2 w-100">
             <!-- date range -->
             <div class="w-100">
               <label for="event-edit-start-date" class="small fw-semibold">Start</label>
               <input type="datetime-local" class="form-control form-control-sm" :disabled="!editing"
-                name="event-edit-start-date" id="event-edit-start-date" v-model="editStart" />
+                name="event-edit-start-date" id="event-edit-start-date" v-model="startDate" />
             </div>
             <div class="w-100">
               <label for="event-edit-end-date" class="small fw-semibold">End</label>
               <input type="datetime-local" class="form-control form-control-sm"
                 :disabled="!editing || currentEvent.allDay" name="event-edit-end-date" id="event-edit-end-date"
-                v-model="editEnd" />
+                v-model="endDate" />
             </div>
           </div>
 
           <!-- location dropdown -->
-          <select v-if="editing" id="event-edit-location-select" class="form-select form-select-sm"
-            v-model="editLocation">
-            <option value="">Select Location (Leave blank for company-wide)</option>
-            <option v-for="l in locations" :key="l.name + '-' + l.id" :value="l.name">
-              {{ l.name || "Company-wide" }}
+          <select :disabled="!editing" id="event-edit-location-select" class="form-select form-select-sm"
+            v-model="location">
+            <option :value="null">Select Location</option>
+            <option v-for="l in locations" :key="l.name + '-' + l.id" :value="l.id">
+              {{ l.name }}
             </option>
           </select>
         </div>
@@ -70,14 +70,14 @@
           <button class="btn btn-sm btn-danger me-2" @click="confirmDelete = true" title="Delete">
             Delete
           </button>
-          <button v-if="editing" class="btn btn-sm btn-danger me-2" @click="revertChanges" title="Discard">
+          <button v-if="editing" class="btn btn-sm btn-danger me-2" @click="resetChanges" title="Discard">
             Discard
           </button>
-          <button v-if="!editing" class="btn btn-sm btn-primary me-2" :disabled="editing" @click="startEditing"
+          <button v-if="!editing" class="btn btn-sm btn-primary me-2" :disabled="editing" @click="startEditing()"
             title="Edit event">
             <Pencil />&nbsp;Edit
           </button>
-          <button v-if="editing" @click="saveChanges" :disabled="!hasChanges" class="btn btn-sm btn-success"
+          <button v-if="editing" @click="saveChanges" :disabled="!changed" class="btn btn-sm btn-success"
             title="Save changes">
             <Floppy />&nbsp;Save
           </button>
@@ -92,6 +92,8 @@ import Pencil from "vue-material-design-icons/Pencil.vue";
 import Floppy from "vue-material-design-icons/Floppy.vue";
 import CalendarRangeOutline from "vue-material-design-icons/CalendarRangeOutline.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
+import { Modal } from "bootstrap";
+import { store } from "@/common/store";
 
 export default {
   components: {
@@ -105,23 +107,28 @@ export default {
   },
   data() {
     return {
-      detailView: false,
       editing: false,
-      editStart: this.event?.start ? this.formatDateTimeLocal(this.event.start) : "",
-      editEnd: this.event?.end ? this.formatDateTimeLocal(this.event.end) : "",
-      editLocation: this.event?.extendedProps?.location_id || "",
-      currentEvent: this.event,
+      changed: false,
+      confirmDelete: false,
+
+      startDate: this.event?.start ? this.formatDateTimeLocal(this.event.start) : new Date().toISOString().slice(0, 16),
+      endDate: this.event?.end ? this.formatDateTimeLocal(this.event.end) : new Date().toISOString().slice(0, 16),
+      location: this.event?.location_id || null,
+
+      originalEvent: {},
+      currentEvent: {},
       locations: [],
-      changes: [], // if event was updated
-      confirmDelete: false
     };
   },
 
   async mounted() {
     this.$refs.modal.addEventListener("hidden.bs.modal", () => {
       this.editing = false;
-      this.changes = [];
-    });
+      this.changed = false;
+    });    
+
+    this.originalEvent = { ...this.event };
+    this.currentEvent = { ...this.event };
 
     // remove focus from any input fields; fix for aria warning after modal close
     const modal = document.getElementById('edit-event-modal');
@@ -135,70 +142,62 @@ export default {
   },
 
   watch: {
+    currentEvent: {
+      handler(newVal) {
+        if (JSON.stringify(newVal) !== JSON.stringify(this.originalEvent)) {
+          this.changed = true;
+        }
+      }
+    },
     event(newEvent) {
       this.currentEvent = newEvent;
       this.editing = false;
-      this.editStart = newEvent?.start ? this.formatDateTimeLocal(newEvent.start) : "";
-      this.editEnd = newEvent?.end ? this.formatDateTimeLocal(newEvent.end) : "";
-      this.editLocation = newEvent?.extendedProps?.location_id || "";
-      this.changes = [];
+      this.startDate = newEvent?.start ? this.formatDateTimeLocal(newEvent.start) : "";
+      this.endDate = newEvent?.end ? this.formatDateTimeLocal(newEvent.end) : "";
+      this.location = newEvent?.location_id || "";
+      this.changed = false;
     },
   },
 
   computed: {
-    hasChanges() {
-      if (!this.currentEvent) return false;
-
-      const originalStart = this.currentEvent.start ? this.formatDateTimeLocal(this.currentEvent.start) : "";
-      const originalEnd = this.currentEvent.end ? this.formatDateTimeLocal(this.currentEvent.end) : "";
-      const originalLocation = this.currentEvent.extendedProps?.location || "";
-
-      return (
-        this.editStart !== originalStart ||
-        this.editEnd !== originalEnd ||
-        this.editLocation !== originalLocation
-      );
-    },
   },
 
   methods: {
-    addChange() {
-      this.changes.push("test");
-      console.log(this.changes);
-    },
-    removeChange() {
-      this.changes.pop();
-      console.log(this.changes);
-    },
-    revertChanges() {
+    resetChanges() {
       this.editing = false;
-      this.changes = [];
-      this.editStart = this.currentEvent?.start ? this.formatDateTimeLocal(this.currentEvent.start) : "";
-      this.editEnd = this.currentEvent?.end ? this.formatDateTimeLocal(this.currentEvent.end) : "";
-      this.editLocation = this.currentEvent?.extendedProps?.location || "";
+      this.changed = false;
+      this.startDate = this.currentEvent?.start ? this.formatDateTimeLocal(this.currentEvent.start) : "";
+      this.endDate = this.currentEvent?.end ? this.formatDateTimeLocal(this.currentEvent.end) : "";
+      this.location = this.currentEvent?.location_id || null;
     },
     saveChanges() {
-      window.alert("TODO: PUT req to update record.");
+      try {
+        console.log('saving changes')
+      } catch (error) {
+        console.error('Error saving changes:', error);
+      } finally {
+        // reset state
+        this.editing = false;
+        this.changed = false;
+        this.startDate = this.currentEvent?.start ? this.formatDateTimeLocal(this.currentEvent.start) : "";
+        this.endDate = this.currentEvent?.end ? this.formatDateTimeLocal(this.currentEvent.end) : "";
+        this.location = this.currentEvent?.location_id || null;
+      }
     },
     async deleteEvent() {
       try { // TODO: add log inserts
-        await this.$axios.post(this.$api + "events" + this.currentEvent.id, {
-          data: {
-            id: this.currentEvent.id,
-            action: "delete"
-          }
+        await this.$axios.post(this.$api + "events?delete", {
+          id: this.currentEvent.id
         });
         this.confirmDelete = false;
-        this.$router.go();
+        store.events = (await this.$axios.get(this.$api + "events?all=1")).data; // refresh store
+        Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
       } catch (error) {
         console.error(error);
       }
     },
     startEditing() {
-      this.editStart = this.currentEvent?.start ? this.formatDateTimeLocal(this.currentEvent.start) : "";
-      this.editEnd = this.currentEvent?.end ? this.formatDateTimeLocal(this.currentEvent.end) : "";
-      this.editLocation = this.currentEvent?.extendedProps?.location || "Blah";
-      this.editing = true;
+      console.log(Object.keys(this.originalEvent));
     },
     formatLabel(value) {
       if (!value) return "-";
