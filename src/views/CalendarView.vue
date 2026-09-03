@@ -165,7 +165,7 @@ export default {
         height: "100%",
         events: [],
         eventClick: (info) => {
-          this.selectedEvent = { ...info.event.extendedProps, start: info.event.start, end: info.event.end }
+          this.selectedEvent = { id: info.event.id, ...info.event.extendedProps, start: info.event.start, end: info.event.end }
           this.initDate = info.event.start
           nextTick(() => {
             Modal.getOrCreateInstance(
