@@ -53,8 +53,8 @@
               <select :disabled="newEvent.type !== 'employee'" required id="event-create-employee"
                 class="form-select form-select-sm" v-model="newEvent.employee_num">
                 <option value="">Select Employee</option>
-                <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.id"
-                  :value="employee.id">
+                <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.number"
+                  :value="employee.number">
                   {{ employee.name }}
                 </option>
               </select>
@@ -175,7 +175,7 @@ export default {
       return Boolean(this.newEvent.start && this.newEvent.title && this.newEvent.type && this.newEvent.subtype);
     },
     locations() {
-      return [...store.locations]
+      return store.locations;
     },
     employees() {
       return store.employees;
@@ -206,6 +206,8 @@ export default {
         }
         // is it company-wide?
         if (this.newEvent.companyWide) this.newEvent.location_id = null;
+        // set default location if company wide unchecked and no location selected
+        if (!this.newEvent.location_id && !this.newEvent.companyWide) this.newEvent.location_id = 1;
         // format for mysql datetime
         this.newEvent.start = this.newEvent.start.replace('T', ' ') + ':00'
         this.newEvent.end = this.newEvent.end.replace('T', ' ') + ':00'

@@ -111,3 +111,31 @@ export function toMySqlDateTime(value) {
 
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
+/**
+ * Formats date string to yyyy-mm-ddThh:mm
+ * @param {string} value - timestamp string
+ * @returns {string} formatted ISO
+ */
+export function formatDateTimeLocal(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
+ * Formats date string to mm/dd/yyyy, for display only
+ * @param {string} value - timestamp string
+ * @returns {string} formatted local date
+ */
+export function formatDate(value) { // formats to mm/dd/yyyy
+  if (!value) return "-";
+  return new Date(value).toLocaleDateString();
+}

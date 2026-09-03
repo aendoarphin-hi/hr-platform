@@ -114,8 +114,6 @@ export default {
   data() {
     return {
       selectedEvent: {},
-      typeFilters: [],
-      subtypeFilters: [],
       subtypeColors: {
         // employee
         birthday: '#D9B84C',
@@ -165,13 +163,19 @@ export default {
         height: "100%",
         events: [],
         eventClick: (info) => {
-          this.selectedEvent = { id: info.event.id, ...info.event.extendedProps, start: info.event.start, end: info.event.end }
+          this.selectedEvent = { 
+            id: info.event.id, 
+            ...info.event.extendedProps, 
+            start: info.event.start, 
+            end: info.event.end 
+          }
           this.initDate = info.event.start
           nextTick(() => {
             Modal.getOrCreateInstance(
               document.getElementById('edit-event-modal')
             ).show()
           })
+          console.log(JSON.stringify(info.event, null, 2))
         },
       },
       allEvents: [],
@@ -233,6 +237,12 @@ export default {
     },
   },
   computed: {
+    typeFilters() {
+      return Object.keys(eventTypes)
+    },
+    subtypeFilters() {
+      return Object.values(eventTypes).flat()
+    },
     availableSubtypes() {
       const { type } = this.filters.events
       return Object.values(eventTypes[type] ?? [])
@@ -244,11 +254,8 @@ export default {
   async mounted() {
     try {
       this.initializing = true;
-      this.typeFilters = Object.keys(eventTypes);
-      this.subtypeFilters = Object.values(eventTypes).flat();
       // initializes event data
       this.processRawEvents(store.events);
-      // filters
       this.initializing = false;
     } catch (e) {
       console.log(e.message);
@@ -259,12 +266,6 @@ export default {
 
       handler(newEvents) {
         this.processRawEvents([...newEvents])
-        this.typeFilters = [
-          ...new Set(newEvents.map(e => e.type))
-        ]
-        this.subtypeFilters = [
-          ...new Set(newEvents.map(e => e.subtype))
-        ]
       },
       deep: true
     },
@@ -282,7 +283,7 @@ export default {
 
           return typeMatch && subtypeMatch
         })
-        store.events = [...store.events] // 
+        store.events = [...store.events]
       },
       deep: true
     }

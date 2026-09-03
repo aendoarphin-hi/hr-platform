@@ -26,5 +26,6 @@ module.exports = {
     'vue/no-unused-components': 'off',
     'no-multiple-empty-lines': 'off',
     'no-unused-vars': 'off',
+    camelcase: 'off',
   },
 }

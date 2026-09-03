@@ -10,7 +10,7 @@
         <Pencil />) and assigned a playlist, which contains a set of ordered images (content) to be presented.
         Online or disabled devices can also be rebooted (
         <Restart />) or previewed (
-        <Eye />)
+        <OpenInNew />)
       </p>
       <h5>Screen Status</h5>
       <span :class="statusBadgeClass('online')" class="badge">Online</span><small> - Screen is fully operational and
@@ -107,7 +107,8 @@
               </select>
             </div>
             <!-- search bar 1 -->
-            <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search" v-model="search" />
+            <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search"
+              v-model="search" />
             <!-- sort dropdown -->
             <div class="ms-0 ms-lg-auto hstack gap-2">
               <small>
@@ -144,12 +145,13 @@
             </button>
           </div>
           <!-- search bar 2 -->
-          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search" v-model="search" />
+          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
+            v-model="search" />
           <!-- list view -->
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="screens && !initializing" class="table table-hover align-middle mb-0">
               <thead class="table-light sticky-top shadow-sm">
-                <tr class="small text-uppercase">
+                <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.screens" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
                     {{ columnLabel(sc) }}
@@ -176,15 +178,12 @@
                     <span>{{ getPlaylistName(d.playlist_id) }}</span>
                   </td>
                   <td class="text-end">
-                    <div class="d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
+                    <div class="d-flex gap-2 justify-content-end" :class="{ invisible: hoverIndex !== i }">
                       <button class="btn btn-sm btn-outline-secondary cursor-pointer">
-                        <Eye /> View
+                        <OpenInNew /> Preview
                       </button>
                       <button class="btn btn-sm btn-outline-secondary cursor-pointer">
                         <Pencil /> Edit
-                      </button>
-                      <button class="btn btn-sm btn-outline-secondary cursor-pointer">
-                        <Restart /> Restart
                       </button>
                     </div>
                   </td>
@@ -196,26 +195,27 @@
           <!-- grid view -->
           <div v-else-if="dataReady && viewMode === 'grid'"
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
-            style="max-height: 70dvh;">
+            style="max-height: 70dvh">
             <div v-for="(d, i) in screens" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-              class="card shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
+              class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                   <Television /> {{ d.name }}
                 </div>
-                <small>
+                <span>
                   <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
-                </small>
-                <small v-if="d.playlist_id" class="text-muted">
+                </span>
+                <span v-if="d.playlist_id" class="text-muted">
                   <PlaylistPlay /> {{ getPlaylistName(d.playlist_id) }}
-                </small>
-                <small v-if="d.location" class="text-muted">
+                </span>
+                <span v-if="d.location" class="text-muted">
                   <MapMarker /> {{ d.location }}
-                </small>
+                </span>
               </div>
               <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                <Pencil class="cursor-pointer" title="Edit" data-bs-toggle="tooltip" />
-                <Restart class="cursor-pointer" title="Restart" />
+                <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                  <Pencil /> Edit
+                </button>
               </div>
             </div>
           </div>
@@ -229,7 +229,8 @@
           <!-- sort, view toggle row -->
           <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             <!-- search bar 1 -->
-          <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search" v-model="search" />
+            <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search"
+              v-model="search" />
             <!-- sort dropdown -->
             <div class="ms-0 hstack gap-2">
               <small>
@@ -266,12 +267,13 @@
             </button>
           </div>
           <!-- search bar 2 -->
-          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search" v-model="search" />
+          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
+            v-model="search" />
           <!-- list view -->
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="playlists && !initializing" class="table table-hover align-middle mb-0">
               <thead class="table-light sticky-top shadow-sm">
-                <tr class="small text-uppercase">
+                <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.playlists" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
                     {{ columnLabel(sc) }}
@@ -308,17 +310,19 @@
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
             <div v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-              class="card shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
+              class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
                   <PlaylistPlay /> {{ p.name }}
                 </div>
-                <small class="text-muted">
+                <span class="text-muted">
                   {{ p.description }}
-                </small>
+                </span>
               </div>
               <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                <Pencil class="cursor-pointer" title="Edit" />
+                <button class="btn btn-sm btn-outline-secondary cursor-pointer">
+                  <Pencil /> Edit
+                </button>
               </div>
             </div>
           </div>
@@ -349,7 +353,8 @@
               </select>
             </div>
             <!-- search bar 1 -->
-            <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search" v-model="search" />
+            <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search"
+              v-model="search" />
             <!-- sort dropdown -->
             <div class="ms-0 ms-lg-auto hstack gap-2">
               <small>
@@ -389,7 +394,8 @@
             </button>
           </div>
           <!-- search bar 2 -->
-          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search" v-model="search" />
+          <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
+            v-model="search" />
 
           <!-- content -->
 
@@ -397,7 +403,7 @@
           <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="content && !initializing" class="table table-hover align-middle mb-0">
               <thead class="table-light sticky-top shadow-sm">
-                <tr class="small text-uppercase">
+                <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.content" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
                     {{ columnLabel(sc) }}
@@ -420,13 +426,13 @@
                   </td>
                   <td>
                     <span class="badge text-capitalize my-0" :class="contentStatusBadgeClass(c.status)">{{ c.status
-                    }}</span>
+                      }}</span>
                   </td>
                   <td>
-                    <span class="text-muted text-capitalize small">{{ new Date(c.created_at).toLocaleString() }}</span>
+                    <span class="text-muted text-capitalize">{{ new Date(c.created_at).toLocaleString() }}</span>
                   </td>
                   <td>
-                    <span class="text-muted small">{{ c.filename }}</span>
+                    <span class="text-muted">{{ c.filename }}</span>
                   </td>
                   <td class="text-end">
                     <div class="text-nowrap d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
@@ -446,7 +452,7 @@
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
             <div v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
-              class="card shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2 overflow-hidden">
+              class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2 overflow-hidden">
               <!-- will provide thumbnail but for now set it as the logo of file type -->
               <!-- <img src="https://picsum.photos/400/200" class="card-img-top" alt="Thumbnail"
                 style="height: 100px; object-fit: cover" /> -->
@@ -494,7 +500,7 @@ import ViewList from "vue-material-design-icons/ViewList.vue";
 import HelpCircleOutline from "vue-material-design-icons/HelpCircleOutline.vue";
 import PlaylistPlay from "vue-material-design-icons/PlaylistPlay.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
-import Eye from "vue-material-design-icons/Eye.vue";
+import OpenInNew from "vue-material-design-icons/OpenInNew.vue";
 import Image from "vue-material-design-icons/Image.vue";
 import FilePdfBox from "vue-material-design-icons/FilePdfBox.vue";
 import Video from "vue-material-design-icons/Video.vue";
@@ -504,6 +510,7 @@ import Television from "vue-material-design-icons/Television.vue";
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 
 import { filterByField, searchByText, sortByField } from "@/common/helpers";
+import { store } from "@/common/store";
 
 export default {
   name: "ScreenView",
@@ -520,7 +527,7 @@ export default {
     HelpCircleOutline,
     PlaylistPlay,
     MapMarker,
-    Eye,
+    OpenInNew,
     Image,
     FilePdfBox,
     Video,
@@ -572,7 +579,7 @@ export default {
   computed: {
     uniqueContentTypes() {
       // distinct options for content type filter
-      return [...new Set(this.rawContent.map((c) => c.type))].sort();
+      return [...new Set([...store.content].map((c) => c.type))].sort();
     },
 
     screens() {
@@ -600,7 +607,7 @@ export default {
     },
 
     content() {
-      let result = [...this.rawContent];
+      let result = [...store.content];
       result = filterByField(result, "type", this.filters.content.type);
       result = filterByField(result, "status", this.filters.content.status);
       if (this.search.trim().length > 0) {
@@ -673,7 +680,7 @@ export default {
           this.rawPlaylists = res.data;
           break;
         case "content":
-          this.rawContent = res.data;
+          store.content = res.data;
           break;
       }
     },
@@ -744,11 +751,14 @@ export default {
     "search"() {
       console.log(this.search)
     },
+    "activeTab"() {
+      this.clearFilters();
+    },
   },
 };
 </script>
 
-<style>
+<style scoped>
 .nav-item.active {
   background-color: var(--bs-primary);
 }
@@ -766,6 +776,14 @@ export default {
   vertical-align: middle;
 }
 
+.table tbody tr {
+  font-size: 0.8rem;
+}
+
+.table tbody tr .btn-sm {
+  font-size: 0.7rem;
+}
+
 .table tbody tr:nth-child(even) {
   background-color: var(--bs-primary);
 }
@@ -776,5 +794,14 @@ export default {
 
 .table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.table tbody tr td {
+  padding: 0.25rem 0.5rem;
+}
+
+.card.card-font-sm,
+.card .card-footer .btn.btn-sm {
+  font-size: 0.8rem;
 }
 </style>
