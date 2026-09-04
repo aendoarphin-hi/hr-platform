@@ -126,7 +126,7 @@
           <div class="card-body">
             <div class="row g-3">
               <template v-if="recentUploads.length > 0">
-                <div v-for="(u, i) in recentUploads" :key="i" class="col-12 col-sm-6">
+                <div v-for="(u, i) in recentUploads" :key="i" class="col-12 col-sm-6 small">
                   <div class="d-flex align-items-center gap-3">
                     <div class="upload-icon rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center">
                       📄
@@ -437,9 +437,9 @@ export default {
         };
       }).slice(0, 5).sort((a, b) => new Date(b.date) - new Date(a.date));
     },
-    employeeEvents() { // sort by event start date where the upcoming one is first, dont include past events
-      return this.events.filter((event) => event.type === "employee" && new Date(event.start) >= new Date())
-        .sort((a, b) => new Date(a.start) - new Date(b.start)).slice(0, 3);
+    employeeEvents() { // sort by event end date where the upcoming one is first, dont include past events
+      return this.events.filter((event) => event.type === "employee" && new Date(event.end) >= new Date())
+        .sort((a, b) => new Date(a.end) - new Date(b.end)).slice(0, 4);
     },
     upcomingAnnouncements() {
       return this.events

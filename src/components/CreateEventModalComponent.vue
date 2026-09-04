@@ -97,7 +97,7 @@
             <span class="hstack gap-2 align-items-center form-control-sm">
               <label for="event-create-all-day" class="small text-nowrap">All Day Event</label>
               <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="newEvent.allDay">
-              <label for="event-create-company-wide" class="small text-nowrap">Company-wide Event</label>
+              <label for="event-create-company-wide" class="small text-nowrap">All Locations</label>
               <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
                 v-model="newEvent.companyWide">
             </span>

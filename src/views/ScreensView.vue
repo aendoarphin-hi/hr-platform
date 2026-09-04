@@ -60,7 +60,7 @@
         <div class="btn btn-sm btn-success">
           <PlaylistPlay /> New Playlist
         </div>
-        <div class="btn btn-sm btn-primary">
+        <div class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
         </div>
 
@@ -481,6 +481,7 @@
         </div>
       </div>
     </div>
+    <UploadContentModalComponent ref="upload-content-modal" />
   </div>
   <div v-else>
     <LoadingComponent message="Loading screens..." />
@@ -510,7 +511,8 @@ import Television from "vue-material-design-icons/Television.vue";
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 
 import { filterByField, searchByText, sortByField } from "@/common/helpers";
-import { store } from "@/common/store";
+import { Modal } from "bootstrap";
+import UploadContentModalComponent from "@/components/UploadContentModalComponent.vue";
 
 export default {
   name: "ScreenView",
@@ -535,6 +537,8 @@ export default {
     UploadBox,
     Television,
     FilterOffOutline,
+
+    UploadContentModalComponent,
   },
   data() {
     return {
@@ -617,6 +621,9 @@ export default {
     },
   },
   methods: {
+    openUploadModal() {
+      Modal.getOrCreateInstance(document.getElementById("upload-content-modal")).show();
+    },
     clearFilters() {
       this.filters = {
         screens: {

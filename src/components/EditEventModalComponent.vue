@@ -9,10 +9,10 @@
               {{ editEvent.title }}
             </strong>
             <div class="d-flex flex-row gap-2 align-items-center">
-              <div class="badge rounded-pill text-capitalize border" style="width: min-content;"
+              <div v-if="editEvent.type && editEvent.subtype" class="badge rounded-pill text-capitalize border" style="width: min-content;"
                 :class="badgeClass(editEvent.type)">
-                {{ formatLabel(editEvent.type) }} |
-                {{ formatLabel(editEvent.subtype) }}
+                {{ editEvent.type }} |
+                {{ editEvent.subtype }}
               </div>
               <small class="text-muted d-flex gap-1 align-items-center">
                 <span v-if="editEvent.location" class="d-inline-flex align-items-center gap-1">
@@ -28,7 +28,6 @@
             </div>
           </div>
         </div>
-        <!-- edit mode body -->
         <div class="modal-body">
           <!-- event description -->
           <p v-if="!editing" class="lh-sm">
@@ -72,11 +71,11 @@
           <span v-if="editing" class="hstack gap-2 align-items-center form-control-sm">
             <label for="event-edit-all-day" class="small text-nowrap">All Day Event</label>
             <input type="checkbox" class="form-check-input my-0" id="event-edit-all-day" v-model="editEvent.allDay">
-            <label for="event-edit-company-wide" class="small text-nowrap">Company-wide Event</label>
+            <label for="event-edit-company-wide" class="small text-nowrap">All Locations</label>
             <input type="checkbox" class="form-check-input my-0" id="event-edit-company-wide" v-model="editEvent.companyWide">
           </span>
         </div>
-
+        <!-- confirmation btns before delete-->
         <div v-if="confirmDelete" class="modal-footer p-2">
           <p class="px-2 me-auto btn btn-sm bg-danger-subtle text-danger-emphasis rounded">Are you sure you want to
             delete this event?</p>
@@ -122,7 +121,7 @@ export default {
     MapMarker
   },
   props: {
-    event: Object,
+    event: Object, // original event from calendar
   },
   inject: ["toast"],
   emits: ["edited", "deleted"],
@@ -131,7 +130,7 @@ export default {
       editing: false,
       hasChanges: false,
       confirmDelete: false,
-      editEvent: {}, // copy of the event to be edited
+      editEvent: {}, // draft event to be updated
       employees: [],
       locations: [],
     };
@@ -198,7 +197,7 @@ export default {
     async saveChanges() {
       try {
         const data = {
-          ...this.editEvent,
+          ...this.editEvent, // format dates for db
           start: toMySqlDateTime(this.editEvent.start),
           end: toMySqlDateTime(this.editEvent.end),
         };
@@ -215,6 +214,7 @@ export default {
         if (this.editEvent.companyWide) {
           data.location_id = null;
         }
+        
         if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return;
         await this.$axios.post(this.$api + "events?update", data);
         this.$emit("edited");
@@ -248,10 +248,6 @@ export default {
     startEditing() {
       this.editing = true;
       console.log(formatDateTimeLocal(this.editEvent.end))
-    },
-    formatLabel(value) {
-      if (!value) return "-";
-      return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     },
     badgeClass(type) {
       switch (type) {

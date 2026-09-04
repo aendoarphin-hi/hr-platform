@@ -45,7 +45,7 @@
       <div class="hstack gap-2 small align-items-center">
         <!-- TODO: add filters -->
         <!-- mdi filter icon-->
-        <Filter class="cursor-pointer" />&nbsp;Filters
+        <span class="hstack align-items-center"><span class="me-1"><Filter class="cursor-pointer" /></span><span>Filters</span></span>
         <select class="form-select form-select-sm text-capitalize" v-model="filters.events.type">
           <option value="">All Types</option>
           <option v-for="t in typeFilters" :key="t" :value="t">{{ t }}</option>
@@ -171,7 +171,7 @@ export default {
             start: info.event.start,
             end: info.event.end,
             allDay: info.event.allDay,
-            companyWide: { ...info.event.extendedProps }.location_id || true
+            companyWide: this.isCompanyWide(info.event.extendedProps.location_id)
           }
           this.initDate = info.event.start
           nextTick(() => {
@@ -199,10 +199,18 @@ export default {
         ).show()
       })
     },
+    isCompanyWide(locationId) {
+      if (locationId) {
+        return false
+      } else {
+        return true
+      }
+    },
     async refreshCalendar() {
       try {
         const res = await this.$axios.get(this.$api + "events?all=1");
         this.events = res.data;
+        this.calendarOptions.events = this.events;
       } catch (e) {
         console.error(e);
       }
@@ -220,6 +228,7 @@ export default {
           endTime === '23:59:59'
         ) {
           e.allDay = true
+          console.log('all day', e)
         }
 
         // color code by event type
@@ -289,7 +298,6 @@ export default {
 
           return typeMatch && subtypeMatch
         })
-        this.events = [...this.events]
       },
       deep: true
     }
