@@ -68,8 +68,8 @@
       <FullCalendar ref="calendar" :options="calendarOptions" />
     </div>
     <!--  modals  -->
-    <EditEventModalComponent :event="selectedEvent" />
-    <CreateEventModalComponent />
+    <EditEventModalComponent :event="selectedEvent" @edited="refreshCalendar" @deleted="refreshCalendar" />
+    <CreateEventModalComponent @created="refreshCalendar" />
   </div>
   <div v-else class="d-flex justify-content-center align-items-center">
     <LoadingComponent message="Loading calendar..." />
@@ -113,6 +113,7 @@ export default {
 
   data() {
     return {
+      events: [],
       selectedEvent: {},
       subtypeColors: {
         // employee
@@ -163,11 +164,14 @@ export default {
         height: "100%",
         events: [],
         eventClick: (info) => {
-          this.selectedEvent = { 
-            id: info.event.id, 
-            ...info.event.extendedProps, 
-            start: info.event.start, 
-            end: info.event.end 
+          this.selectedEvent = {
+            id: info.event.id,
+            title: info.event.title,
+            ...info.event.extendedProps,
+            start: info.event.start,
+            end: info.event.end,
+            allDay: info.event.allDay,
+            companyWide: { ...info.event.extendedProps }.location_id || true
           }
           this.initDate = info.event.start
           nextTick(() => {
@@ -175,7 +179,7 @@ export default {
               document.getElementById('edit-event-modal')
             ).show()
           })
-          console.log(JSON.stringify(info.event, null, 2))
+          console.log(JSON.stringify(this.selectedEvent, null, 2))
         },
       },
       allEvents: [],
@@ -195,8 +199,13 @@ export default {
         ).show()
       })
     },
-    updateEvent(event) {
-      window.alert("edit event not implemented yet");
+    async refreshCalendar() {
+      try {
+        const res = await this.$axios.get(this.$api + "events?all=1");
+        this.events = res.data;
+      } catch (e) {
+        console.error(e);
+      }
     },
     processRawEvents(events) {
       events.forEach(e => {
@@ -247,23 +256,20 @@ export default {
       const { type } = this.filters.events
       return Object.values(eventTypes[type] ?? [])
     },
-    storeEvents() {
-      return store.events
-    },
   },
   async mounted() {
     try {
       this.initializing = true;
       // initializes event data
-      this.processRawEvents(store.events);
+      this.events = (await this.$axios.get(this.$api + "events?all=1")).data;
+      this.processRawEvents(this.events);
       this.initializing = false;
     } catch (e) {
       console.log(e.message);
     }
   },
   watch: {
-    storeEvents: {
-
+    events: {
       handler(newEvents) {
         this.processRawEvents([...newEvents])
       },
@@ -283,7 +289,7 @@ export default {
 
           return typeMatch && subtypeMatch
         })
-        store.events = [...store.events]
+        this.events = [...this.events]
       },
       deep: true
     }

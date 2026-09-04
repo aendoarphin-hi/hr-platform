@@ -5,23 +5,25 @@
       <div class="modal-content shadow">
         <div class="modal-header">
           <div class="d-flex flex-column w-100 gap-1">
-            <strong class="text-nowrap overflow-hidden me-4" style="text-overflow: ellipsis"
-              :title="editEvent.title">
+            <strong class="text-nowrap overflow-hidden me-4" style="text-overflow: ellipsis" :title="editEvent.title">
               {{ editEvent.title }}
             </strong>
             <div class="d-flex flex-row gap-2 align-items-center">
-              <div class="badge rounded-pill text-capitalize" style="width: min-content;"
+              <div class="badge rounded-pill text-capitalize border" style="width: min-content;"
                 :class="badgeClass(editEvent.type)">
                 {{ formatLabel(editEvent.type) }} |
                 {{ formatLabel(editEvent.subtype) }}
               </div>
-              <small class="text-muted">
-                <span v-if="editEvent.location">
-                  <MapMarker /> {{ editEvent.location }}&nbsp;&nbsp;&middot;&nbsp;&nbsp;
+              <small class="text-muted d-flex gap-1 align-items-center">
+                <span v-if="editEvent.location" class="d-inline-flex align-items-center gap-1">
+                  <MapMarker /> {{ editEvent.location }}
+                  <span class="separator">&middot;</span>
                 </span>
-                <CalendarRangeOutline />&nbsp;
-                <span v-if="editEvent.allDay">{{ formatDate(editEvent.start) }}</span>
-                <span v-else>{{ formatDate(editEvent.start) }} - {{ formatDate(editEvent.end) }}</span>
+                <span class="d-inline-flex align-items-center gap-1">
+                  <CalendarRangeOutline />
+                  <span v-if="editEvent.allDay">{{ formatDate(editEvent.start) }}</span>
+                  <span v-else>{{ formatDate(editEvent.start) }} - {{ formatDate(editEvent.end) }}</span>
+                </span>
               </small>
             </div>
           </div>
@@ -40,7 +42,7 @@
           <select v-if="editEvent.type === 'employee'" :disabled="!editing" id="event-edit-employee-select"
             class="form-select form-select-sm" v-model="editEvent.employee_num">
             <option :value="editEvent.employee_num">{{ employeeName }}</option>
-            <option v-for="employee in employees" :key="employee.number" :value="employee.number">
+            <option v-for="employee in sortedEmployees" :key="employee.number" :value="employee.number">
               {{ employee.name }}
             </option>
           </select>
@@ -53,14 +55,13 @@
             </div>
             <div class="w-100">
               <label for="event-edit-end-date" class="small fw-semibold">End</label>
-              <input type="datetime-local" class="form-control form-control-sm"
-                :disabled="!editing || editEvent.allDay" name="event-edit-end-date" id="event-edit-end-date"
-                v-model="editEvent.end" />
+              <input type="datetime-local" class="form-control form-control-sm" :disabled="!editing || editEvent.allDay"
+                name="event-edit-end-date" id="event-edit-end-date" v-model="editEvent.end" />
             </div>
           </div>
 
           <!-- location dropdown -->
-          <select :disabled="!editing" id="event-edit-location-select" class="form-select form-select-sm"
+          <select :disabled="!editing" id="event-edit-location-select" :class="{ disabled: this.editEvent.companyWide !== false}" class="form-select form-select-sm"
             v-model="editEvent.location_id">
             <option :value="null">Select Location</option>
             <option v-for="l in locations" :key="l.name + '-' + l.id" :value="l.id">
@@ -69,10 +70,10 @@
           </select>
 
           <span v-if="editing" class="hstack gap-2 align-items-center form-control-sm">
-            <label for="event-create-all-day" class="small text-nowrap">All Day Event</label>
-            <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="allDay">
-            <label for="event-create-company-wide" class="small text-nowrap">Company-wide Event</label>
-            <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide" v-model="companyWide">
+            <label for="event-edit-all-day" class="small text-nowrap">All Day Event</label>
+            <input type="checkbox" class="form-check-input my-0" id="event-edit-all-day" v-model="editEvent.allDay">
+            <label for="event-edit-company-wide" class="small text-nowrap">Company-wide Event</label>
+            <input type="checkbox" class="form-check-input my-0" id="event-edit-company-wide" v-model="editEvent.companyWide">
           </span>
         </div>
 
@@ -83,19 +84,19 @@
           <button class="btn btn-sm btn-success" @click="deleteEvent();">Yes</button>
         </div>
         <div v-else class="modal-footer p-2">
-          <button data-bs-dismiss="modal" v-if="!editing" class="btn btn-sm btn-secondary me-2"
-            title="Close">Close</button>
+          <button data-bs-dismiss="modal" class="btn btn-sm btn-secondary me-2"
+          >{{ editing ? 'Cancel' : 'Close' }}</button>
           <button v-if="!editing" class="btn btn-sm btn-danger me-2" @click="confirmDelete = true" title="Delete">
             Delete
           </button>
-          <button data-bs-dismiss="modal" v-if="editing" class="btn btn-sm btn-secondary me-2" title="Discard Changes">
+          <button data-bs-dismiss="modal" v-if="editing" :disabled="!hasChanges" class="btn btn-sm btn-secondary me-2" title="Discard Changes">
             Discard Changes
           </button>
           <button v-if="!editing" class="btn btn-sm btn-primary me-2" :disabled="editing" @click="startEditing()"
             title="Edit event">
             <Pencil />&nbsp;Edit
           </button>
-          <button v-if="editing" @click="saveChanges" :disabled="!changed" class="btn btn-sm btn-success"
+          <button v-if="editing" @click="saveChanges" :disabled="!hasChanges" class="btn btn-sm btn-success"
             title="Save changes">
             <Floppy />&nbsp;Save
           </button>
@@ -111,7 +112,6 @@ import Floppy from "vue-material-design-icons/Floppy.vue";
 import CalendarRangeOutline from "vue-material-design-icons/CalendarRangeOutline.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
 import { Modal } from "bootstrap";
-import { store } from "@/common/store";
 import { formatDate, formatDateTimeLocal, toMySqlDateTime } from "@/common/helpers";
 
 export default {
@@ -124,19 +124,54 @@ export default {
   props: {
     event: Object,
   },
+  inject: ["toast"],
+  emits: ["edited", "deleted"],
   data() {
     return {
       editing: false,
-      changed: false,
+      hasChanges: false,
       confirmDelete: false,
       editEvent: {}, // copy of the event to be edited
+      employees: [],
       locations: [],
     };
+  },
+  computed: {
+    sortedEmployees() {
+      return [...this.employees].sort((a, b) => a.name.localeCompare(b.name));
+    },
+    employeeName() {
+      return this.employees.find(e => e.number === this.editEvent.employee_num)?.name;
+    }
+  },
+  watch: {
+    editEvent: {
+      handler(newValue) {
+        const updated = {
+          ...newValue,
+          start: toMySqlDateTime(newValue.start),
+          end: toMySqlDateTime(newValue.end),
+        };
+        const original = {
+          ...this.event,
+          start: toMySqlDateTime(this.event.start),
+          end: toMySqlDateTime(this.event.end),
+        };
+        this.hasChanges = JSON.stringify(updated) !== JSON.stringify(original);
+      },
+      deep: true
+    },
+
+    event(newEvent) {
+      this.editEvent = this.formatForEdit(newEvent);
+      this.hasChanges = false;
+      this.editing = false;
+    },
   },
   async mounted() {
     this.$refs.modal.addEventListener("hidden.bs.modal", () => {
       this.editing = false;
-      this.changed = false;
+      this.hasChanges = false;
     });
 
     // remove focus from any input fields; fix for aria warning after modal close
@@ -146,70 +181,49 @@ export default {
     });
 
     // fetch all available locations for the location select dropdown
-    const res = (await this.$axios.get(this.$api + 'locations?all=1')).data;
-    this.locations = res;
+    const l = (await this.$axios.get(this.$api + 'locations?all=1')).data;
+    const e = (await this.$axios.get(this.$api + 'employees?all=1')).data;
+    this.locations = l; this.employees = e;
   },
 
-  watch: {
-    editEvent: {
-      handler(newValue) {
-        const updated = {
-          ...newValue,
-          start: toMySqlDateTime(newValue.start),
-          end: toMySqlDateTime(newValue.end),
-        };
-
-        const original = {
-          ...this.event,
-          start: toMySqlDateTime(this.event.start),
-          end: toMySqlDateTime(this.event.end),
-        };
-
-        this.changed = JSON.stringify(updated) !== JSON.stringify(original);
-      },
-      deep: true
-    },
-
-    event(newEvent) {
-      this.editEvent = this.formatForEdit(newEvent);
-      this.changed = false;
-      this.editing = false;
-      this.companyWide = this.editEvent.location_id === null;
-      this.allDay = false;
-      if (newEvent.end - newEvent.start === 86340000) {
-        this.allDay = true;
-      }
-    },
-  },
-  computed: {
-    employees() {
-      return store.employees.sort((a, b) => a.name.localeCompare(b.name));
-    },
-    employeeName() {
-      return this.employees.find(e => e.number === this.editEvent.employee_num)?.name;
-    }
-  },
   methods: {
     formatDate,
     formatDateTimeLocal,
     resetChanges() {
       this.editing = false;
-      this.changed = false;
+      this.hasChanges = false;
+      this.confirmDelete = false;
       this.editEvent = this.formatForEdit(this.event);
     },
     async saveChanges() {
       try {
         const data = {
           ...this.editEvent,
-          start: this.formatDateTimeLocal(this.editEvent.start),
-          end: this.formatDateTimeLocal(this.editEvent.end),
+          start: toMySqlDateTime(this.editEvent.start),
+          end: toMySqlDateTime(this.editEvent.end),
         };
-        if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return; // continue here finish the event update
+        // All day?
+        if (this.editEvent.allDay) {
+          data.start = data.start.split(' ')[0] + " 00:00:00";
+          data.end = data.start.split(' ')[0] + " 23:59:59";
+        }
+        // Parse IDs
+        if (this.editEvent.id) data.id = parseInt(this.editEvent.id);
+        if (this.editEvent.location_id) data.location_id = parseInt(this.editEvent.location_id);
+        if (this.editEvent.content_id) data.content_id = parseInt(this.editEvent.content_id);
+        // Company wide?
+        if (this.editEvent.companyWide) {
+          data.location_id = null;
+        }
+        if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return;
         await this.$axios.post(this.$api + "events?update", data);
+        this.$emit("edited");
+        Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
+        this.toast.show("Event Updated", "The event has been successfully updated.", "bg-info-subtle text-info-emphasis");
         this.resetChanges();
-        store.events = (await this.$axios.get(this.$api + "events?all=1")).data;
       } catch (error) {
         console.error("Error saving changes:", error);
+        this.toast.show("Error: ", error, "bg-info-subtle text-info-emphasis");
       }
     },
     formatForEdit(event) { // format dates for form inputs
@@ -225,7 +239,7 @@ export default {
           id: this.editEvent.id
         });
         this.resetChanges();
-        store.events = (await this.$axios.get(this.$api + "events?all=1")).data; // refresh store
+        this.$emit("deleted")
         Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
       } catch (error) {
         console.error(error);
@@ -233,6 +247,7 @@ export default {
     },
     startEditing() {
       this.editing = true;
+      console.log(formatDateTimeLocal(this.editEvent.end))
     },
     formatLabel(value) {
       if (!value) return "-";
