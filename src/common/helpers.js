@@ -115,7 +115,7 @@ export function toMySqlDateTime(value) {
 /**
  * Formats date string to yyyy-mm-ddThh:mm
  * @param {string} value - timestamp string
- * @returns {string} formatted ISO
+ * @returns {string} formatted ISO datetime
  */
 export function formatDateTimeLocal(value) {
   if (!value) return "";
