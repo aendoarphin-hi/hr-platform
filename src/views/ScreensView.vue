@@ -579,7 +579,7 @@ export default {
   computed: {
     uniqueContentTypes() {
       // distinct options for content type filter
-      return [...new Set([...store.content].map((c) => c.type))].sort();
+      return [...new Set([...this.rawContent].map((c) => c.type))].sort();
     },
 
     screens() {
@@ -607,7 +607,7 @@ export default {
     },
 
     content() {
-      let result = [...store.content];
+      let result = [...this.rawContent];
       result = filterByField(result, "type", this.filters.content.type);
       result = filterByField(result, "status", this.filters.content.status);
       if (this.search.trim().length > 0) {
@@ -680,7 +680,7 @@ export default {
           this.rawPlaylists = res.data;
           break;
         case "content":
-          store.content = res.data;
+          this.rawContent = res.data;
           break;
       }
     },

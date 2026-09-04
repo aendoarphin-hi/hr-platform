@@ -145,6 +145,8 @@ export default {
         content_id: null, // optional
         companyWide: false // optional
       },
+      locations: [],
+      employees: [],
       error: ""
     };
   },
@@ -153,6 +155,9 @@ export default {
       this.$refs.modal.addEventListener("hidden.bs.modal", () => {
         this.clearChanges();
       });
+
+      this.locations = (await this.$axios.get(this.$api + "locations?all=1")).data;
+      this.employees = (await this.$axios.get(this.$api + "employees?all=1")).data;
 
       // remove focus from any input fields; FIX for aria warning after modal close
       const modal = document.getElementById('create-event-modal');
@@ -164,6 +169,8 @@ export default {
     }
   },
 
+  emits: ["created"],
+
   computed: {
     types() {
       return Object.keys(eventTypes);
@@ -174,12 +181,6 @@ export default {
     canSave() {
       return Boolean(this.newEvent.start && this.newEvent.title && this.newEvent.type && this.newEvent.subtype);
     },
-    locations() {
-      return store.locations;
-    },
-    employees() {
-      return store.employees;
-    }
   },
 
   methods: {
@@ -217,8 +218,7 @@ export default {
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         // post
         await this.$axios.post(this.$api + "events?new", this.newEvent);
-        // refresh the store
-        store.events = (await this.$axios.get(this.$api + "events?all=1")).data;
+        this.$emit("created")
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
       } catch (error) {
         this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");

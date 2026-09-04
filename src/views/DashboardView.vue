@@ -291,6 +291,14 @@ export default {
 
   data() {
     return {
+      activity: [],
+      events: [],
+      screens: [],
+      playlists: [],
+      content: [],
+      approvals: [],
+      employees: [],
+
       loading: false,
       quickStats: [],
       needsAttention: [],
@@ -415,27 +423,6 @@ export default {
     },
   },
   computed: {
-    activity() {
-      return store.activity;
-    },
-    events() {
-      return store.events;
-    },
-    screens() {
-      return store.screens;
-    },
-    playlists() {
-      return store.playlists;
-    },
-    content() {
-      return store.content;
-    },
-    approvals() {
-      return store.approvals;
-    },
-    employees() {
-      return store.employees;
-    },
     recentUploads() {
       return [...this.content]
         .sort((a, b) => new Date(b.created) - new Date(a.created))
@@ -465,6 +452,22 @@ export default {
     console.log(store)
     try {
       this.loading = true;
+
+      const states = [
+        "activity",
+        "events",
+        "screens",
+        "playlists",
+        "content",
+        "approvals",
+        "employees"
+      ];
+
+      await Promise.all(
+        states.map(async d => {
+          this[d] = (await this.$axios.get(this.$api + d + "?all=1")).data;
+        })
+      );
 
       this.quickStats = [
         {
