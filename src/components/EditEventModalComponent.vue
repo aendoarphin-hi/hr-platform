@@ -5,12 +5,15 @@
       <div class="modal-content shadow">
         <div class="modal-header">
           <div class="d-flex flex-column w-100 gap-1">
-            <strong class="text-nowrap overflow-hidden me-4" style="text-overflow: ellipsis" :title="editEvent.title">
+            <strong v-if="!editing" class="text-nowrap overflow-hidden me-4" style="text-overflow: ellipsis"
+              :title="editEvent.title">
               {{ editEvent.title }}
             </strong>
-            <div class="d-flex flex-row gap-2 align-items-center">
-              <div v-if="editEvent.type && editEvent.subtype" class="badge rounded-pill text-capitalize border" style="width: min-content;"
-                :class="badgeClass(editEvent.type)">
+            <input v-else type="text" class="form-control form-control-sm" placeholder="Event Title"
+              v-model="editEvent.title" />
+            <div v-if="!editing" class="d-flex flex-row gap-2 align-items-center">
+              <div v-if="editEvent.type && editEvent.subtype" class="badge rounded-pill text-capitalize border"
+                style="width: min-content;" :class="badgeClass(editEvent.type)">
                 {{ editEvent.type }} |
                 {{ editEvent.subtype }}
               </div>
@@ -25,6 +28,21 @@
                   <span v-else>{{ formatDate(editEvent.start) }} - {{ formatDate(editEvent.end) }}</span>
                 </span>
               </small>
+            </div>
+            <div v-else class="d-flex flex-row gap-2 align-items-center mt-1">
+              <select class="form-select form-select-sm text-capitalize" v-model="editEvent.type">
+                <option value="">Select Type</option>
+                <option v-for="t in types" :key="t" :value="t">
+                  {{ t }}
+                </option>
+              </select>
+              <select :disabled="this.editEvent.type.length === 0" class="form-select form-select-sm text-capitalize"
+                v-model="editEvent.subtype">
+                <option value="">Select Subtype</option>
+                <option v-for="st in subtypes" :key="st" :value="st">
+                  {{ st }}
+                </option>
+              </select>
             </div>
           </div>
         </div>
@@ -49,18 +67,20 @@
             <!-- date range -->
             <div class="w-100">
               <label for="event-edit-start-date" class="small fw-semibold">Start</label>
-              <input type="datetime-local" class="form-control form-control-sm" :disabled="!editing"
+              <input type="datetime-local" step="1" class="form-control form-control-sm" :disabled="!editing"
                 name="event-edit-start-date" id="event-edit-start-date" v-model="editEvent.start" />
             </div>
             <div class="w-100">
               <label for="event-edit-end-date" class="small fw-semibold">End</label>
-              <input type="datetime-local" class="form-control form-control-sm" :disabled="!editing || editEvent.allDay"
-                name="event-edit-end-date" id="event-edit-end-date" v-model="editEvent.end" />
+              <input type="datetime-local" step="1" class="form-control form-control-sm"
+                :disabled="!editing || editEvent.allDay" name="event-edit-end-date" id="event-edit-end-date"
+                v-model="editEvent.end" />
             </div>
           </div>
 
           <!-- location dropdown -->
-          <select :disabled="!editing" id="event-edit-location-select" :class="{ disabled: this.editEvent.companyWide !== false}" class="form-select form-select-sm"
+          <select :disabled="!editing" id="event-edit-location-select"
+            :class="{ disabled: this.editEvent.companyWide !== false }" class="form-select form-select-sm"
             v-model="editEvent.location_id">
             <option :value="null">Select Location</option>
             <option v-for="l in locations" :key="l.name + '-' + l.id" :value="l.id">
@@ -69,10 +89,11 @@
           </select>
 
           <span v-if="editing" class="hstack gap-2 align-items-center form-control-sm">
-            <label for="event-edit-all-day" class="small text-nowrap">All Day Event</label>
+            <label for="event-edit-all-day" class="small text-nowrap">One-day Event</label>
             <input type="checkbox" class="form-check-input my-0" id="event-edit-all-day" v-model="editEvent.allDay">
             <label for="event-edit-company-wide" class="small text-nowrap">All Locations</label>
-            <input type="checkbox" class="form-check-input my-0" id="event-edit-company-wide" v-model="editEvent.companyWide">
+            <input type="checkbox" class="form-check-input my-0" id="event-edit-company-wide"
+              v-model="editEvent.companyWide">
           </span>
         </div>
         <!-- confirmation btns before delete-->
@@ -83,12 +104,13 @@
           <button class="btn btn-sm btn-success" @click="deleteEvent();">Yes</button>
         </div>
         <div v-else class="modal-footer p-2">
-          <button data-bs-dismiss="modal" class="btn btn-sm btn-secondary me-2"
-          >{{ editing ? 'Cancel' : 'Close' }}</button>
+          <button data-bs-dismiss="modal" class="btn btn-sm btn-secondary me-2">{{ editing ? 'Cancel' : 'Close'
+          }}</button>
           <button v-if="!editing" class="btn btn-sm btn-danger me-2" @click="confirmDelete = true" title="Delete">
             Delete
           </button>
-          <button data-bs-dismiss="modal" v-if="editing" :disabled="!hasChanges" class="btn btn-sm btn-secondary me-2" title="Discard Changes">
+          <button data-bs-dismiss="modal" v-if="editing" :disabled="!hasChanges" class="btn btn-sm btn-secondary me-2"
+            title="Discard Changes">
             Discard Changes
           </button>
           <button v-if="!editing" class="btn btn-sm btn-primary me-2" :disabled="editing" @click="startEditing()"
@@ -112,6 +134,7 @@ import CalendarRangeOutline from "vue-material-design-icons/CalendarRangeOutline
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
 import { Modal } from "bootstrap";
 import { formatDate, formatDateTimeLocal, toMySqlDateTime } from "@/common/helpers";
+import { eventTypes } from "@/common/constants";
 
 export default {
   components: {
@@ -128,7 +151,6 @@ export default {
   data() {
     return {
       editing: false,
-      hasChanges: false,
       confirmDelete: false,
       editEvent: {}, // draft event to be updated
       employees: [],
@@ -136,6 +158,26 @@ export default {
     };
   },
   computed: {
+    hasChanges() {
+      return (
+        this.editEvent.title !== this.event.title ||
+        this.editEvent.type !== this.event.type ||
+        this.editEvent.subtype !== this.event.subtype ||
+        this.editEvent.description !== this.event.description ||
+        this.editEvent.location_id !== this.event.location_id ||
+        this.editEvent.start !== this.formatDateTimeLocal(this.event.start) ||
+        this.editEvent.end !== this.formatDateTimeLocal(this.event.end) ||
+        this.editEvent.allDay !== this.event.allDay ||
+        this.editEvent.companyWide !== this.event.companyWide ||
+        this.editEvent.employee_num !== this.event.employee_num
+      );
+    },
+    types() {
+      return Object.keys(eventTypes);
+    },
+    subtypes() {
+      return eventTypes[this.editEvent.type] ?? [];
+    },
     sortedEmployees() {
       return [...this.employees].sort((a, b) => a.name.localeCompare(b.name));
     },
@@ -144,33 +186,24 @@ export default {
     }
   },
   watch: {
-    editEvent: {
-      handler(newValue) {
-        const updated = {
-          ...newValue,
-          start: toMySqlDateTime(newValue.start),
-          end: toMySqlDateTime(newValue.end),
-        };
-        const original = {
-          ...this.event,
-          start: toMySqlDateTime(this.event.start),
-          end: toMySqlDateTime(this.event.end),
-        };
-        this.hasChanges = JSON.stringify(updated) !== JSON.stringify(original);
+    'editEvent.start': {
+      handler() {
+        this.updateAllDay();
       },
-      deep: true
     },
-
+    'editEvent.end': {
+      handler() {
+        this.updateAllDay();
+      },
+    },
     event(newEvent) {
       this.editEvent = this.formatForEdit(newEvent);
-      this.hasChanges = false;
       this.editing = false;
     },
   },
   async mounted() {
     this.$refs.modal.addEventListener("hidden.bs.modal", () => {
       this.editing = false;
-      this.hasChanges = false;
     });
 
     // remove focus from any input fields; fix for aria warning after modal close
@@ -188,9 +221,28 @@ export default {
   methods: {
     formatDate,
     formatDateTimeLocal,
+    isMidnight(date) {
+      return (
+        date.getHours() === 0 &&
+        date.getMinutes() === 0 &&
+        date.getSeconds() === 0
+      );
+    },
+
+    updateAllDay() {
+      const start = new Date(this.editEvent.start);
+      const end = new Date(this.editEvent.end);
+
+      const nextDay = new Date(start);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      this.editEvent.allDay =
+        nextDay.toDateString() === end.toDateString() &&
+        this.isMidnight(start) &&
+        this.isMidnight(end);
+    },
     resetChanges() {
       this.editing = false;
-      this.hasChanges = false;
       this.confirmDelete = false;
       this.editEvent = this.formatForEdit(this.event);
     },
@@ -214,7 +266,6 @@ export default {
         if (this.editEvent.companyWide) {
           data.location_id = null;
         }
-        
         if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return;
         await this.$axios.post(this.$api + "events?update", data);
         this.$emit("edited");
@@ -230,7 +281,6 @@ export default {
       const updated = structuredClone(event);
       updated.start = this.formatDateTimeLocal(event.start);
       updated.end = this.formatDateTimeLocal(event.end);
-
       return updated;
     },
     async deleteEvent() {
@@ -241,13 +291,13 @@ export default {
         this.resetChanges();
         this.$emit("deleted")
         Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
+        this.toast.show("Event Deleted", "The event has been successfully deleted.", "bg-info-subtle text-info-emphasis");
       } catch (error) {
         console.error(error);
       }
     },
     startEditing() {
       this.editing = true;
-      console.log(formatDateTimeLocal(this.editEvent.end))
     },
     badgeClass(type) {
       switch (type) {

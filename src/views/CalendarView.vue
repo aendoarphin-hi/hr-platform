@@ -45,7 +45,9 @@
       <div class="hstack gap-2 small align-items-center">
         <!-- TODO: add filters -->
         <!-- mdi filter icon-->
-        <span class="hstack align-items-center"><span class="me-1"><Filter class="cursor-pointer" /></span><span>Filters</span></span>
+        <span class="hstack align-items-center"><span class="me-1">
+            <Filter class="cursor-pointer" />
+          </span><span>Filters</span></span>
         <select class="form-select form-select-sm text-capitalize" v-model="filters.events.type">
           <option value="">All Types</option>
           <option v-for="t in typeFilters" :key="t" :value="t">{{ t }}</option>
@@ -113,7 +115,7 @@ export default {
 
   data() {
     return {
-      events: [],
+      events: [], // raw api events
       selectedEvent: {},
       subtypeColors: {
         // employee
@@ -164,13 +166,14 @@ export default {
         height: "100%",
         events: [],
         eventClick: (info) => {
+          console.log(info.event.end)
           this.selectedEvent = {
             id: info.event.id,
             title: info.event.title,
-            ...info.event.extendedProps,
             start: info.event.start,
             end: info.event.end,
             allDay: info.event.allDay,
+            ...info.event.extendedProps,
             companyWide: this.isCompanyWide(info.event.extendedProps.location_id)
           }
           this.initDate = info.event.start
@@ -179,8 +182,9 @@ export default {
               document.getElementById('edit-event-modal')
             ).show()
           })
-          console.log(JSON.stringify(this.selectedEvent, null, 2))
-        },
+          console.log(info.event)
+          console.log('From Calendar: ' + JSON.stringify(this.selectedEvent, null, 2))
+        }
       },
       allEvents: [],
       filters: {
@@ -199,6 +203,13 @@ export default {
         ).show()
       })
     },
+    isAllDay(start, end) {
+      const sDate = start.split(' ')[0]
+      const eDate = end.split(' ')[0]
+      const sTime = start.split(' ')[1]
+      const eTime = end.split(' ')[1]
+      return sDate === eDate && sTime === '00:00:00' && eTime === '23:59:59'
+    },
     isCompanyWide(locationId) {
       if (locationId) {
         return false
@@ -208,45 +219,49 @@ export default {
     },
     async refreshCalendar() {
       try {
-        const res = await this.$axios.get(this.$api + "events?all=1");
-        this.events = res.data;
-        this.calendarOptions.events = this.events;
+        const res = await this.$axios.get(this.$api + "events?all=1")
+
+        this.events = res.data
+        this.processRawEvents(this.events)
       } catch (e) {
-        console.error(e);
+        console.error(e)
       }
     },
     processRawEvents(events) {
-      events.forEach(e => {
-        const [startDate, startTime] = e.start.split(' ')
-        const [endDate, endTime] = e.end.split(' ')
+      const processedEvents = events.map(e => {
+        const event = { ...e }
 
-        if (
-          // set allDay to true if start and end are the same day and 
-          // time is 00:00:00 to 23:59:59
-          startDate === endDate &&
-          startTime === '00:00:00' &&
-          endTime === '23:59:59'
-        ) {
-          e.allDay = true
-          console.log('all day', e)
+        // set calendar all day flag
+        if (this.isAllDay(event.start, event.end)) {
+          const start = new Date(event.start.replace(' ', 'T'))
+          const end = new Date(start)
+
+          // FullCalendar uses an exclusive end date for all day events,
+          // so the end date is set to the next day at 00:00:00
+          end.setDate(end.getDate() + 1)
+
+          event.start = start
+          event.end = end
+          event.allDay = true
+        } else {
+          event.allDay = false
         }
 
-        // color code by event type
-        e.color = this.subtypeColors[e.subtype] ?? 'gray'
+        // color code by event type/subtypes
+        event.color = this.subtypeColors[event.subtype] ?? 'gray'
+
+        return event
       })
-      if (this.initDate) { // persist calendar page
+
+      if (this.initDate) { // persist calendar page for edit and create
         this.calendarOptions.initialDate = this.initDate
       }
-      // check for currently toggled filters
-      if (this.filters.events.type.length > 0) {
-        events = events.filter(e => e.type === this.filters.events.type)
-      }
-      if (this.filters.events.subtype.length > 0) {
-        events = events.filter(e => e.subtype === this.filters.events.subtype)
-      }
-      // inject events
-      this.allEvents = events // unfiltered copy
-      this.calendarOptions.events = events
+
+      // unfiltered copy
+      this.allEvents = processedEvents
+
+      // inject into calendar
+      this.calendarOptions.events = processedEvents
     },
     clearFilters() {
       this.filters.events.type = ""
@@ -278,12 +293,6 @@ export default {
     }
   },
   watch: {
-    events: {
-      handler(newEvents) {
-        this.processRawEvents([...newEvents])
-      },
-      deep: true
-    },
     'filters.events.type': {
       handler() {
         this.filters.events.subtype = ""

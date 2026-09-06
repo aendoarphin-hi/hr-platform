@@ -50,11 +50,11 @@
             <p class="small">Employee events can be tied to a specific employee</p>
             <!-- employee selection if type is employee -->
             <div class="mb-3">
-              <select :disabled="newEvent.type !== 'employee'" required id="event-create-employee"
+              <select :disabled="newEvent.type !== 'employee'" id="event-create-employee"
                 class="form-select form-select-sm" v-model="newEvent.employee_num">
-                <option value="">Select Employee</option>
-                <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))" :key="employee.number"
-                  :value="employee.number">
+                <option :value="null">Select Employee</option>
+                <option v-for="employee in employees.sort((a, b) => a.name.localeCompare(b.name))"
+                  :key="employee.number" :value="employee.number">
                   {{ employee.name }}
                 </option>
               </select>
@@ -74,20 +74,21 @@
             <div class="mb-3 d-flex flex-row flex-wrap gap-2 w-100">
               <div class="col">
                 <label for="event-create-start-date" class="small">Start</label>
-                <input required type="datetime-local" class="text-uppercase form-control form-control-sm"
+                <input required type="datetime-local" step="1" class="text-uppercase form-control form-control-sm"
                   id="event-create-start-date" v-model="newEvent.start" />
               </div>
               <div class="col">
                 <label for="event-create-end-date" class="small">End</label>
-                <input type="datetime-local" :disabled="newEvent.allDay"
+                <input type="datetime-local" step="1" :disabled="newEvent.allDay"
                   class="text-uppercase form-control form-control-sm" id="event-create-end-date"
                   v-model="newEvent.end" />
               </div>
             </div>
 
             <!-- locations dropdown -->
-            <select id="event-create-location" required :disabled="newEvent.companyWide"
-              class="form-select form-select-sm mb-3" v-model="newEvent.location_id">
+            <select id="event-create-location" :disabled="newEvent.companyWide" :required="!newEvent.companyWide"
+              class="form-select form-select-sm mb-3"
+              v-model="newEvent.location_id">
               <option :value="null">Select Location</option>
               <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
                 {{ location.name }}
@@ -95,7 +96,7 @@
             </select>
 
             <span class="hstack gap-2 align-items-center form-control-sm">
-              <label for="event-create-all-day" class="small text-nowrap">All Day Event</label>
+              <label for="event-create-all-day" class="small text-nowrap">One-day Event</label>
               <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="newEvent.allDay">
               <label for="event-create-company-wide" class="small text-nowrap">All Locations</label>
               <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
@@ -109,7 +110,7 @@
               Cancel
             </button>
 
-            <button type="submit" :disabled="!canSave" class="btn btn-sm btn-success" title="Create Event">
+            <button type="submit" class="btn btn-sm btn-success" title="Create Event">
               + Create
             </button>
           </div>
@@ -121,7 +122,7 @@
 
 <script>
 import { eventTypes } from "@/common/constants";
-import { store } from "@/common/store";
+import { toMySqlDateTime } from "@/common/helpers";
 import { Modal } from "bootstrap";
 
 export default {
@@ -179,7 +180,9 @@ export default {
       return eventTypes[this.newEvent.type] ?? [];
     },
     canSave() {
-      return Boolean(this.newEvent.start && this.newEvent.title && this.newEvent.type && this.newEvent.subtype);
+      return Boolean(
+        this.newEvent.title && this.newEvent.type && this.newEvent.subtype && this.newEvent.start
+      );
     },
   },
 
@@ -197,34 +200,37 @@ export default {
         content_id: null, // optional
         companyWide: false // optional
       };
+      this.error = ""
     },
     async createEvent() {
       try {
-        // is it one-day?
+        // is it employee-specific?
+        if (this.newEvent.type === "employee" && this.newEvent.employee_num === null) {
+          this.error = "Please select an employee."; return;
+        }
+        // is it one-day (allDay)?
         if (this.newEvent.allDay) {
-          this.newEvent.start = this.newEvent.start.split('T')[0] + ' 00:00';
-          this.newEvent.end = this.newEvent.start.split(' ')[0] + ' 23:59';
+          this.newEvent.start = this.newEvent.start.split('T')[0] + ' 00:00:00';
+          this.newEvent.end = this.newEvent.start.split(' ')[0] + ' 23:59:59';
+          // console.log(this.newEvent.start);
+          // console.log(this.newEvent.end);
         }
         // is it company-wide?
-        if (this.newEvent.companyWide) this.newEvent.location_id = null;
-        // set default location if company wide unchecked and no location selected
-        if (!this.newEvent.location_id && !this.newEvent.companyWide) this.newEvent.location_id = 1;
-        // format for mysql datetime
-        this.newEvent.start = this.newEvent.start.replace('T', ' ') + ':00'
-        this.newEvent.end = this.newEvent.end.replace('T', ' ') + ':00'
-        // parse any ids to int
-        this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
-        this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
+        if (this.newEvent.companyWide && this.newEvent.location_id) this.newEvent.location_id = null;
+        // parse non null string int IDs to int, otherwise default to null for db
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
+        this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
+        this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
+        if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
         // post
         await this.$axios.post(this.$api + "events?new", this.newEvent);
+        this.clearChanges();
+        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
         this.$emit("created")
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
       } catch (error) {
-        this.toast.show("Error creating event:", error, "bg-danger-subtle text-danger-emphasis");
-      } finally {
-        this.clearChanges();
-        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
+        this.error = "Error creating event: " + error;
+        console.error(error);
       }
     },
     formatDateTimeLocal(value) {
@@ -238,20 +244,49 @@ export default {
 
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     },
+    validateDates() {
+      if (!this.newEvent.start || !this.newEvent.end) { 
+        console.log('no dates'); return; 
+      } else { console.log('validating dates'); }
+      if (new Date(this.newEvent.start) > new Date(this.newEvent.end) ||
+        this.newEvent.start === this.newEvent.end) {
+        this.newEvent.end = ''; this.error = "Date and time cannot overlap or be the same.";
+      }
+    }
   },
   watch: {
     'newEvent.type': {
-      handler() {
-        this.newEvent.subtype = '';
+      handler(newVal) {
+        this.newEvent.subtype = newVal === "employee" ? this.subtypes[0] : "";
+        if (newVal === "employee") this.newEvent.employee_num = null
       },
     },
-    newEvent: {
-      handler(newVal) {
-        if (newVal.start && newVal.end && new Date(newVal.start) > new Date(newVal.end)) {
-          this.newEvent.end = ''; this.error = "Dates cannot overlap";
-        }
+    'newEvent.start': {
+      handler(newValue) {
+        this.validateDates(newValue);
+        console.log(this.newEvent.start);
       },
-      deep: true,
+    },
+    'newEvent.end': {
+      handler(newValue) {
+        this.validateDates(newValue);
+        console.log(this.newEvent.end);
+      },
+    },
+    'newEvent.companyWide': {
+      handler(newValue) {
+        if (newValue === true) {
+          this.newEvent.location_id = null;
+        } else {
+          this.newEvent.location_id = this.locations[0].id;
+        }
+        console.log('Location ID: ' + this.locations[0].id);
+      },
+    },
+    'newEvent.allDay': {
+      handler(newValue) {
+        this.validateDates(newValue);
+      },
     },
   },
 };
