@@ -443,8 +443,8 @@ export default {
     },
     upcomingAnnouncements() {
       return this.events
-        .filter((event) => event.type === "announcement" && event.subtype !== "weather" && new Date(event.start) >= new Date())
-        .sort((a, b) => new Date(a.start) - new Date(b.start))
+        .filter((event) => event.type === "announcement" && event.subtype !== "weather" && new Date(event.end) >= new Date())
+        .sort((a, b) => new Date(a.end) - new Date(b.end))
         .slice(0, 5);
     },
   },
