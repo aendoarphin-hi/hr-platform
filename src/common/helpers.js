@@ -92,16 +92,8 @@ export function formatTimeAgo(timestamp) {
   return then.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-/**
- * Formats date string to mysql datetime
- * @param {string} value - timestamp string
- * @returns {string} formatted mysql DATETIME
- */
-export function toMySqlDateTime(value) {
-  if (!value) return null;
-
+function getDateTimeParts(value) {
   const date = new Date(value);
-
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -109,29 +101,33 @@ export function toMySqlDateTime(value) {
   const minutes = String(date.getMinutes()).padStart(2, "0");
   const seconds = String(date.getSeconds()).padStart(2, "0");
 
+  return { year, month, day, hours, minutes, seconds };
+}
+
+/**
+ * Formats date string to `yyyy-mm-dd hh:mm:ss`
+ * @param {string} value - timestamp string
+ * @returns {string} formatted mysql DATETIME
+ */
+export function toMySqlDateTime(value) {
+  if (!value) return null;
+  const { year, month, day, hours, minutes, seconds } = getDateTimeParts(value);
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
- * Formats date string to yyyy-mm-ddThh:mm
+ * Formats date string to `yyyy-mm-ddThh:mm`
  * @param {string} value - timestamp string
  * @returns {string} formatted ISO datetime
  */
 export function formatDateTimeLocal(value) {
   if (!value) return "";
-
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  const { year, month, day, hours, minutes, seconds } = getDateTimeParts(value);
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 }
 
 /**
- * Formats date string to mm/dd/yyyy, for display only
+ * Formats date string to `mm/dd/yyyy`, for display only
  * @param {string} value - timestamp string
  * @returns {string} formatted local date
  */
