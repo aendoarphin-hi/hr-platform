@@ -7,7 +7,7 @@
 <script>
 export default {
   mounted() {
-    console.log('upload modal mounted') // continue here make the content creation modal
+    console.log('upload modal mounted') // TODO: make the content creation modal
   },
 }
 </script>

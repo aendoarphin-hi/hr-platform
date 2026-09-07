@@ -79,7 +79,7 @@
           </div>
 
           <!-- location dropdown -->
-          <select :disabled="!editing" id="event-edit-location-select"
+          <select :disabled="!editing || editEvent.companyWide" id="event-edit-location-select"
             :class="{ disabled: this.editEvent.companyWide !== false }" class="form-select form-select-sm"
             v-model="editEvent.location_id">
             <option :value="null">Select Location</option>
@@ -186,6 +186,15 @@ export default {
     }
   },
   watch: {
+    'editEvent.companyWide': {
+      handler(newValue) {
+        if (newValue === true) {
+          this.editEvent.location_id = null;
+        } else {
+          this.editEvent.location_id = this.locations[0].id;
+        }
+      },
+    },
     'editEvent.start': {
       handler() {
         this.updateAllDay();
@@ -213,9 +222,8 @@ export default {
     });
 
     // fetch all available locations for the location select dropdown
-    const l = (await this.$axios.get(this.$api + 'locations?all=1')).data;
-    const e = (await this.$axios.get(this.$api + 'employees?all=1')).data;
-    this.locations = l; this.employees = e;
+    this.locations = (await this.$axios.get(this.$api + 'locations?all=1')).data;
+    this.employees = (await this.$axios.get(this.$api + 'employees?all=1')).data;
   },
 
   methods: {
@@ -228,7 +236,6 @@ export default {
         date.getSeconds() === 0
       );
     },
-
     updateAllDay() {
       const start = new Date(this.editEvent.start);
       const end = new Date(this.editEvent.end);
@@ -248,8 +255,10 @@ export default {
     },
     async saveChanges() {
       try {
+        // format dates for db (00:00:00 --> 23:59:59) and 
+        // (yyy-mmm-ddThh:mm:ss --> yyy-mmm-dd hh:mm:ss)
         const data = {
-          ...this.editEvent, // format dates for db
+          ...this.editEvent,
           start: toMySqlDateTime(this.editEvent.start),
           end: toMySqlDateTime(this.editEvent.end),
         };
@@ -258,6 +267,7 @@ export default {
           data.start = data.start.split(' ')[0] + " 00:00:00";
           data.end = data.start.split(' ')[0] + " 23:59:59";
         }
+        // if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return;
         // Parse IDs
         if (this.editEvent.id) data.id = parseInt(this.editEvent.id);
         if (this.editEvent.location_id) data.location_id = parseInt(this.editEvent.location_id);

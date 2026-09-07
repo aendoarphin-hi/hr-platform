@@ -35,7 +35,7 @@
       </div>
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
-        <div class="btn btn-sm btn-success" @click="createEvent">
+        <div class="btn btn-sm btn-success" @click="openCreateEvent">
           + Create Event
         </div>
       </div>
@@ -43,7 +43,6 @@
     <!-- filters -->
     <div class="card p-3 mt-3">
       <div class="hstack gap-2 small align-items-center">
-        <!-- TODO: add filters -->
         <!-- mdi filter icon-->
         <span class="hstack align-items-center"><span class="me-1">
             <Filter class="cursor-pointer" />
@@ -67,11 +66,16 @@
     </div>
     <!--  calendar  -->
     <div id="calendar-container" class="card p-3 mt-3">
-      <FullCalendar ref="calendar" :options="calendarOptions" />
+      <FullCalendar ref="calendar" :range="selectedDateRange" :options="calendarOptions" />
     </div>
     <!--  modals  -->
     <EditEventModalComponent :event="selectedEvent" @edited="refreshCalendar" @deleted="refreshCalendar" />
-    <CreateEventModalComponent @created="refreshCalendar" />
+    <CreateEventModalComponent :range="selectedDateRange" @created="refreshCalendar" />
+    <!-- pop over create button on date drag -->
+    <div :hidden="!showPopover" @click="openCreateEvent" class="btn btn-sm btn-success small text-nowrap" id="create-event-popover"
+      :style="{ left: dragged.style.left, top: dragged.style.top, position: 'absolute', zIndex: 999 }">
+      + New Event
+    </div>
   </div>
   <div v-else class="d-flex justify-content-center align-items-center">
     <LoadingComponent message="Loading calendar..." />
@@ -85,6 +89,7 @@ import themePlugin from '@fullcalendar/vue3/themes/forma'
 import dayGridPlugin from '@fullcalendar/vue3/daygrid'
 import timeGridPlugin from '@fullcalendar/vue3/timegrid'
 import listPlugin from '@fullcalendar/vue3/list'
+import interactionPlugin from '@fullcalendar/vue3/interaction'
 
 // Styles
 import '@fullcalendar/vue3/skeleton.css'
@@ -97,7 +102,6 @@ import { Modal } from 'bootstrap'
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 import Filter from "vue-material-design-icons/Filter.vue"
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue"
-import { store } from "@/common/store"
 import { eventTypes } from '@/common/constants'
 
 export default {
@@ -139,13 +143,23 @@ export default {
       },
       initializing: false,
       initDate: new Date(), // used to persist calendar page
+      dragged: {
+        style: {
+          left: 0,
+          top: 0
+        }
+      },
+      selectedDateRange: null,
+      showPopover: false,
       calendarOptions: {
         plugins: [ // available calendar views
           themePlugin,
           dayGridPlugin,
           timeGridPlugin,
-          listPlugin
+          listPlugin,
+          interactionPlugin
         ],
+        selectable: true, // enable drag select for new event creation
         initialView: 'dayGridMonth',
         headerToolbar: {
           left: 'prev,next today',
@@ -165,8 +179,18 @@ export default {
         },
         height: "100%",
         events: [],
+        select: (info) => {
+          this.selectedDateRange = {
+            start: info.start,
+            end: info.end
+          }
+          this.showAtMousPos(info)
+          console.log(JSON.stringify(this.selectedDateRange, null, 2));
+        },
+        unselect: () => {
+          this.showPopover = false
+        },
         eventClick: (info) => {
-          console.log(info.event.end)
           this.selectedEvent = {
             id: info.event.id,
             title: info.event.title,
@@ -182,8 +206,7 @@ export default {
               document.getElementById('edit-event-modal')
             ).show()
           })
-          console.log(info.event)
-          console.log('From Calendar: ' + JSON.stringify(this.selectedEvent, null, 2))
+          console.log('Raw event: ' + JSON.stringify(this.selectedEvent, null, 2))
         }
       },
       allEvents: [],
@@ -196,7 +219,12 @@ export default {
     }
   },
   methods: {
-    createEvent() {
+    showAtMousPos(info) {
+      this.dragged.style.left = info.jsEvent.clientX - 60 + "px";
+      this.dragged.style.top = info.jsEvent.clientY + 40 + "px";
+      this.showPopover = true;
+    },
+    openCreateEvent() {
       nextTick(() => {
         Modal.getOrCreateInstance(
           document.getElementById('create-event-modal')
@@ -228,6 +256,7 @@ export default {
       }
     },
     processRawEvents(events) {
+      // Process raw event data for calendar display
       const processedEvents = events.map(e => {
         const event = { ...e }
 
@@ -238,6 +267,8 @@ export default {
 
           // FullCalendar uses an exclusive end date for all day events,
           // so the end date is set to the next day at 00:00:00
+          // DB all-day timestamp -> `<DATE> 23:59:59`
+          // fullcalendar all-day timestamp `<NEXT DATE> 00:00:00`
           end.setDate(end.getDate() + 1)
 
           event.start = start

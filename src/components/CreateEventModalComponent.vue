@@ -30,7 +30,7 @@
             </div>
 
             <!-- type + subtype dropdown-->
-            <div class="mb-3 d-flex flex-row gap-2 w-100">
+            <div class="mb-2 d-flex flex-row gap-2 w-100">
               <select required id="event-create-type" class="form-select form-select-sm text-capitalize"
                 v-model="newEvent.type">
                 <option value="">Select Type</option>
@@ -47,7 +47,7 @@
                 </option>
               </select>
             </div>
-            <p class="small">Employee events can be tied to a specific employee</p>
+            <label for="event-create-employee" class="small">Employee events can be tied to a specific employee</label>
             <!-- employee selection if type is employee -->
             <div class="mb-3">
               <select :disabled="newEvent.type !== 'employee'" id="event-create-employee"
@@ -79,7 +79,7 @@
               </div>
               <div class="col">
                 <label for="event-create-end-date" class="small">End</label>
-                <input type="datetime-local" step="1" :disabled="newEvent.allDay"
+                <input required type="datetime-local" step="1" :disabled="newEvent.allDay"
                   class="text-uppercase form-control form-control-sm" id="event-create-end-date"
                   v-model="newEvent.end" />
               </div>
@@ -87,21 +87,28 @@
 
             <!-- locations dropdown -->
             <select id="event-create-location" :disabled="newEvent.companyWide" :required="!newEvent.companyWide"
-              class="form-select form-select-sm mb-3"
-              v-model="newEvent.location_id">
+              class="form-select form-select-sm mb-2" v-model="newEvent.location_id">
               <option :value="null">Select Location</option>
               <option v-for="location in locations" :key="location.name + '-' + location.id" :value="location.id">
                 {{ location.name }}
               </option>
             </select>
 
-            <span class="hstack gap-2 align-items-center form-control-sm">
+            <!-- event flags -->
+            <span class="hstack gap-2 align-items-center mb-1" :disabled="newEvent.companyWide">
               <label for="event-create-all-day" class="small text-nowrap">One-day Event</label>
               <input type="checkbox" class="form-check-input my-0" id="event-create-all-day" v-model="newEvent.allDay">
               <label for="event-create-company-wide" class="small text-nowrap">All Locations</label>
               <input type="checkbox" class="form-check-input my-0" id="event-create-company-wide"
                 v-model="newEvent.companyWide">
             </span>
+
+            <!-- file upload -->
+            <div>
+              <label for="event-create-file" class="small">Upload File</label>
+              <input type="file" accept=".jpg,.jpeg,.png,.pdf,.mp4" class="form-control form-control-sm"
+                id="event-create-file" />
+            </div>
           </div>
 
           <div class="modal-footer p-2">
@@ -122,12 +129,15 @@
 
 <script>
 import { eventTypes } from "@/common/constants";
-import { toMySqlDateTime } from "@/common/helpers";
 import { Modal } from "bootstrap";
 
 export default {
   components: {
 
+  },
+
+  props: {
+    range: Object
   },
 
   inject: ["toast"],
@@ -221,7 +231,7 @@ export default {
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
         this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
-        if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
+        // if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
         // post
         await this.$axios.post(this.$api + "events?new", this.newEvent);
         this.clearChanges();
@@ -245,9 +255,6 @@ export default {
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     },
     validateDates() {
-      if (!this.newEvent.start || !this.newEvent.end) { 
-        console.log('no dates'); return; 
-      } else { console.log('validating dates'); }
       if (new Date(this.newEvent.start) > new Date(this.newEvent.end) ||
         this.newEvent.start === this.newEvent.end) {
         this.newEvent.end = ''; this.error = "Date and time cannot overlap or be the same.";
@@ -264,13 +271,11 @@ export default {
     'newEvent.start': {
       handler(newValue) {
         this.validateDates(newValue);
-        console.log(this.newEvent.start);
       },
     },
     'newEvent.end': {
       handler(newValue) {
         this.validateDates(newValue);
-        console.log(this.newEvent.end);
       },
     },
     'newEvent.companyWide': {
@@ -280,12 +285,29 @@ export default {
         } else {
           this.newEvent.location_id = this.locations[0].id;
         }
-        console.log('Location ID: ' + this.locations[0].id);
       },
     },
     'newEvent.allDay': {
       handler(newValue) {
         this.validateDates(newValue);
+      },
+    },
+    range: {
+      handler(newValue) {
+        const start = new Date(newValue.start);
+        const end = new Date(newValue.end);
+
+        const diffMs = end.getTime() - start.getTime();
+        const oneDayMs = 24 * 60 * 60 * 1000;
+
+        // if the range is longer than one day, update both dates.
+        // Otherwise, only update the start date.
+        if (diffMs > oneDayMs) {
+          this.newEvent.start = this.formatDateTimeLocal(newValue.start);
+          this.newEvent.end = this.formatDateTimeLocal(newValue.end);
+        } else {
+          this.newEvent.start = this.formatDateTimeLocal(newValue.start);
+        }
       },
     },
   },
