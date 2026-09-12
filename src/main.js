@@ -31,6 +31,8 @@ app.config.globalProperties = {
   $axios: axios,
 }
 
+console.log("Hayden " + config.appName + " v" + config.appVersion);
+
 app
   .component("LoadingComponent", LoadingComponent)
   .component("HelpModalComponent", HelpModalComponent)

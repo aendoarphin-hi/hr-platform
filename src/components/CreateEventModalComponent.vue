@@ -1,7 +1,7 @@
 <template>
   <!-- modal -->
   <form @submit.prevent="createEvent">
-    <div class="modal fade" id="create-event-modal" ref="modal" tabindex="-1" role="dialog">
+    <div class="modal fade" id="create-event-modal" ref="createEventModal" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
         <div class="modal-content shadow">
           <div class="modal-header">
@@ -163,10 +163,14 @@ export default {
   },
   async mounted() {
     try {
-      this.$refs.modal.addEventListener("hidden.bs.modal", () => {
+      this.$refs.createEventModal.addEventListener("hidden.bs.modal", () => {
         this.editing = false;
-        // remove focus from any input fields; fix for aria warning after modal close
-        document.activeElement?.blur();
+      });
+
+      this.$refs.createEventModal.addEventListener("hide.bs.modal", () => {
+        if (document.activeElement && this.$refs.createEventModal.contains(document.activeElement)) {
+          document.activeElement.blur();
+        }
       });
 
       this.locations = (await this.$axios.get(this.$api + "locations?all=1")).data;

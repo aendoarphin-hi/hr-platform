@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <div class="modal fade show" id="edit-event-modal" ref="modal" tabindex="-1" role="dialog">
+  <div class="modal fade show" id="edit-event-modal" ref="editEventModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px">
       <div class="modal-content shadow">
         <div class="modal-header">
@@ -36,8 +36,8 @@
                   {{ t }}
                 </option>
               </select>
-              <select required :disabled="this.editEvent.type.length === 0" class="form-select form-select-sm text-capitalize"
-                v-model="editEvent.subtype">
+              <select required :disabled="this.editEvent.type.length === 0"
+                class="form-select form-select-sm text-capitalize" v-model="editEvent.subtype">
                 <option value="">Select Subtype</option>
                 <option v-for="st in subtypes" :key="st" :value="st">
                   {{ st }}
@@ -56,7 +56,8 @@
             v-model="editEvent.description" style="height: 150px; resize: none;">
           </textarea>
           <!-- employee selection if event type allows it -->
-          <label v-if="editEvent.type === 'employee'" for="event-edit-employee-select" class="small fw-semibold">Employee</label>
+          <label v-if="editEvent.type === 'employee'" for="event-edit-employee-select"
+            class="small fw-semibold">Employee</label>
           <select v-if="editEvent.type === 'employee'" :disabled="!editing" id="event-edit-employee-select"
             class="form-select form-select-sm" v-model="editEvent.employee_num">
             <option :value="editEvent.employee_num">{{ employeeName }}</option>
@@ -164,15 +165,15 @@ export default {
         ((this.editEvent.type === 'employee' && this.editEvent.employee_num !== null) || (this.editEvent.type !== 'employee')) &&
         (eventTypes[this.editEvent.type]?.includes(this.editEvent.subtype)) &&
         (this.editEvent.title !== this.event.title ||
-        this.editEvent.type !== this.event.type ||
-        this.editEvent.subtype !== this.event.subtype ||
-        this.editEvent.description !== this.event.description ||
-        this.editEvent.location_id !== this.event.location_id ||
-        this.editEvent.start !== this.formatDateTimeLocal(this.event.start) ||
-        this.editEvent.end !== this.formatDateTimeLocal(this.event.end) ||
-        this.editEvent.allDay !== this.event.allDay ||
-        this.editEvent.companyWide !== this.event.companyWide ||
-        this.editEvent.employee_num !== this.event.employee_num)
+          this.editEvent.type !== this.event.type ||
+          this.editEvent.subtype !== this.event.subtype ||
+          this.editEvent.description !== this.event.description ||
+          this.editEvent.location_id !== this.event.location_id ||
+          this.editEvent.start !== this.formatDateTimeLocal(this.event.start) ||
+          this.editEvent.end !== this.formatDateTimeLocal(this.event.end) ||
+          this.editEvent.allDay !== this.event.allDay ||
+          this.editEvent.companyWide !== this.event.companyWide ||
+          this.editEvent.employee_num !== this.event.employee_num)
       );
     },
     types() {
@@ -214,10 +215,18 @@ export default {
     },
   },
   async mounted() {
-    this.$refs.modal.addEventListener("hidden.bs.modal", () => {
+    this.$refs.editEventModal.addEventListener("hidden.bs.modal", () => {
       this.editing = false;
-      // remove focus from any input fields; fix for aria warning after modal close
-      document.activeElement?.blur();
+    });
+
+    this.$refs.editEventModal.addEventListener("hide.bs.modal", () => {
+      // move focus out of the modal BEFORE Bootstrap sets aria-hidden="true" on it.
+      // otherwise, if the clicked close button still holds focus (a descendant of the
+      // modal), the browser blocks aria-hidden and logs:
+      // "Blocked aria-hidden on an element because its descendant retained focus."
+      if (document.activeElement && this.$refs.editEventModal.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
     });
 
     // fetch all available locations for the location select dropdown

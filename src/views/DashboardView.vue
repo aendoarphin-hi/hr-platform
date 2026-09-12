@@ -126,13 +126,13 @@
           <div class="card-body">
             <div class="row g-3">
               <template v-if="recentUploads.length > 0">
-                <div v-for="(u, i) in recentUploads" :key="i" class="col-12 col-sm-6 small">
+                <div v-for="(u, i) in recentUploads" :key="i" class="col col-md-6">
                   <div class="d-flex align-items-center gap-3">
                     <div class="upload-icon rounded-3 flex-shrink-0 d-flex align-items-center justify-content-center">
                       📄
                     </div>
-                    <div class="min-w-0">
-                      <div class="fw-semibold text-truncate text-uppercase">{{ u.title }}</div>
+                    <div class="overflow-hidden">
+                      <div class="fw-semibold text-uppercase text-nowrap text-truncate">{{ u.title }}</div>
                       <div class="text-muted small">{{ u.filename }} &middot; {{ new Date(u.created_at).toDateString()
                       }}</div>
                     </div>
@@ -217,21 +217,6 @@
             </div>
           </div>
         </div>
-
-        <!--  needs attention  -->
-        <div v-if="needsAttention.length > 0" class="card shadow-sm overflow-hidden">
-          <div class="card-header bg-warning-subtle text-warning-emphasis d-flex align-items-center gap-2">
-            <Alert :size="16" />
-            <h6 class="card-title mb-0">Needs Attention</h6>
-          </div>
-          <ul class="list-group rounded-0 scrollable-list flex-fill">
-            <li v-for="(n, i) in needsAttention" :key="i" class="list-group-item d-flex align-items-center gap-2">
-              <span class="attention-dot rounded-circle flex-shrink-0"></span>
-              <div class="flex-grow-1">{{ n }}</div>
-            </li>
-          </ul>
-        </div>
-
       </div>
     </div>
     <CreateEventModalComponent :preset="announcementPreset" />

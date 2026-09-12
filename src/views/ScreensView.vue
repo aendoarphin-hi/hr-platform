@@ -1,5 +1,5 @@
 <template>
-  <div v-if="dataReady" :id="`${$route.name}-view`" class="w-100 p-3">
+  <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Navigating</h5>
@@ -80,8 +80,7 @@
       <!-- tab views -->
       <div class="tab-content">
         <!-- =======================  SCREENS TAB VIEW   =============================== -->
-        <div v-if="dataReady" class="tab-pane fade show" :class="activeTab === 'screens' ? 'show active' : ''"
-          id="screens">
+        <div class="tab-pane fade show" :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
           <!-- filters, sort, view toggle row -->
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <!-- Filters -->
@@ -148,9 +147,9 @@
           <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
             v-model="search" />
           <!-- list view -->
-          <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
-            <table v-if="screens && !initializing" class="table table-hover align-middle mb-0">
-              <thead class="table-light sticky-top shadow-sm">
+          <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
+            <table v-if="screens.length > 0" class="table table-hover align-middle mb-0">
+              <thead class="table-light sticky-top shadow-sm text-nowrap">
                 <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.screens" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
@@ -190,10 +189,12 @@
                 </tr>
               </tbody>
             </table>
-            <LoadingComponent v-else message="Loading screens..." class="my-auto" />
+            <div v-if="screens.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <span class="text-muted">No screens found.</span>
+            </div>
           </div>
           <!-- grid view -->
-          <div v-else-if="dataReady && viewMode === 'grid'"
+          <div v-else-if="!initializing && viewMode === 'grid'"
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
             <div v-for="(d, i) in screens" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
@@ -212,20 +213,14 @@
                   <MapMarker /> {{ d.location }}
                 </span>
               </div>
-              <div class="card-footer d-flex gap-3 justify-content-end" :class="{ invisible: hoverIndex !== i }">
-                <button class="btn btn-sm btn-outline-secondary cursor-pointer">
-                  <Pencil /> Edit
-                </button>
-              </div>
+            </div>
+            <div v-if="screens.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <span class="text-muted">No screens found.</span>
             </div>
           </div>
         </div>
-        <div v-else>
-          <LoadingComponent message="Loading screens..." />
-        </div>
         <!-- =======================  PLAYLIST TAB VIEW   =============================== -->
-        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''"
-          id="playlists">
+        <div class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''" id="playlists">
           <!-- sort, view toggle row -->
           <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             <!-- search bar 1 -->
@@ -270,9 +265,9 @@
           <input type="search" class="form-control form-control-sm mb-3 d-block d-xl-none" placeholder="Search"
             v-model="search" />
           <!-- list view -->
-          <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
-            <table v-if="playlists && !initializing" class="table table-hover align-middle mb-0">
-              <thead class="table-light sticky-top shadow-sm">
+          <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
+            <table v-if="playlists.length > 0" class="table table-hover align-middle mb-0">
+              <thead class="table-light sticky-top shadow-sm text-nowrap">
                 <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.playlists" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
@@ -302,11 +297,13 @@
                 </tr>
               </tbody>
             </table>
-            <LoadingComponent v-else message="Loading playlists..." />
+            <div v-if="playlists.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <span class="text-muted">No playlists found.</span>
+            </div>
           </div>
 
           <!-- grid view -->
-          <div v-else-if="dataReady && viewMode === 'grid'"
+          <div v-else-if="!initializing && viewMode === 'grid'"
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
             <div v-for="(p, i) in playlists" :key="p.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
@@ -325,13 +322,13 @@
                 </button>
               </div>
             </div>
+            <div v-if="playlists.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <span class="text-muted">No playlists found.</span>
+            </div>
           </div>
         </div>
-        <div v-else>
-          <LoadingComponent message="Loading playlists..." />
-        </div>
         <!-- =======================  CONTENT TAB VIEW   =============================== -->
-        <div v-if="dataReady" class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
+        <div class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
           <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             <!-- Filters -->
             <div class="hstack gap-2">
@@ -400,9 +397,9 @@
           <!-- content -->
 
           <!-- list view -->
-          <div v-if="dataReady && viewMode === 'list'" class="table-responsive border-top border-bottom">
-            <table v-if="content && !initializing" class="table table-hover align-middle mb-0">
-              <thead class="table-light sticky-top shadow-sm">
+          <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
+            <table v-if="content.length > 0" class="table table-hover align-middle mb-0">
+              <thead class="table-light sticky-top shadow-sm text-nowrap">
                 <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.content" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
@@ -426,7 +423,7 @@
                   </td>
                   <td>
                     <span class="badge text-capitalize my-0" :class="contentStatusBadgeClass(c.status)">{{ c.status
-                      }}</span>
+                    }}</span>
                   </td>
                   <td>
                     <span class="text-muted text-capitalize">{{ new Date(c.created_at).toLocaleString() }}</span>
@@ -444,11 +441,13 @@
                 </tr>
               </tbody>
             </table>
-            <LoadingComponent v-else message="Loading content..." />
+            <div v-if="content.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <span class="text-muted">No content found.</span>
+            </div>
           </div>
 
           <!-- grid view -->
-          <div v-else-if="dataReady && viewMode === 'grid'"
+          <div v-else-if="!initializing && viewMode === 'grid'"
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
             <div v-for="(c, i) in content" :key="c.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
@@ -474,10 +473,10 @@
                 </small>
               </div>
             </div>
+            <div v-if="content.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
+              <span class="text-muted">No content found.</span>
+            </div>
           </div>
-        </div>
-        <div v-else>
-          <LoadingComponent message="Loading content..." />
         </div>
       </div>
     </div>
@@ -743,7 +742,6 @@ export default {
 
       await Promise.all(this.endpoints.map((endpoint) => this.fetchEndpoint(endpoint)));
 
-      this.dataReady = true;
       this.initializing = false;
     } catch (error) {
       console.log(error + " at " + this.name);

@@ -62,3 +62,8 @@ $table-hover-bg: rgba(0, 0, 0, 0.028);
 .tab-pane * {
   animation: fadInUp 0.4s ease both;
 }
+
+.text-truncate {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
