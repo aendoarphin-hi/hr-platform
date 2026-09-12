@@ -449,7 +449,6 @@ export default {
     },
   },
   async mounted() {
-    console.log(store)
     try {
       this.loading = true;
 

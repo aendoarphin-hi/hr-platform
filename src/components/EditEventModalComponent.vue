@@ -30,13 +30,13 @@
               </small>
             </div>
             <div v-else class="d-flex flex-row gap-2 align-items-center mt-1">
-              <select class="form-select form-select-sm text-capitalize" v-model="editEvent.type">
+              <select required class="form-select form-select-sm text-capitalize" v-model="editEvent.type">
                 <option value="">Select Type</option>
                 <option v-for="t in types" :key="t" :value="t">
                   {{ t }}
                 </option>
               </select>
-              <select :disabled="this.editEvent.type.length === 0" class="form-select form-select-sm text-capitalize"
+              <select required :disabled="this.editEvent.type.length === 0" class="form-select form-select-sm text-capitalize"
                 v-model="editEvent.subtype">
                 <option value="">Select Subtype</option>
                 <option v-for="st in subtypes" :key="st" :value="st">
@@ -56,6 +56,7 @@
             v-model="editEvent.description" style="height: 150px; resize: none;">
           </textarea>
           <!-- employee selection if event type allows it -->
+          <label v-if="editEvent.type === 'employee'" for="event-edit-employee-select" class="small fw-semibold">Employee</label>
           <select v-if="editEvent.type === 'employee'" :disabled="!editing" id="event-edit-employee-select"
             class="form-select form-select-sm" v-model="editEvent.employee_num">
             <option :value="editEvent.employee_num">{{ employeeName }}</option>
@@ -160,7 +161,9 @@ export default {
   computed: {
     hasChanges() {
       return (
-        this.editEvent.title !== this.event.title ||
+        ((this.editEvent.type === 'employee' && this.editEvent.employee_num !== null) || (this.editEvent.type !== 'employee')) &&
+        (eventTypes[this.editEvent.type]?.includes(this.editEvent.subtype)) &&
+        (this.editEvent.title !== this.event.title ||
         this.editEvent.type !== this.event.type ||
         this.editEvent.subtype !== this.event.subtype ||
         this.editEvent.description !== this.event.description ||
@@ -169,7 +172,7 @@ export default {
         this.editEvent.end !== this.formatDateTimeLocal(this.event.end) ||
         this.editEvent.allDay !== this.event.allDay ||
         this.editEvent.companyWide !== this.event.companyWide ||
-        this.editEvent.employee_num !== this.event.employee_num
+        this.editEvent.employee_num !== this.event.employee_num)
       );
     },
     types() {
@@ -213,11 +216,7 @@ export default {
   async mounted() {
     this.$refs.modal.addEventListener("hidden.bs.modal", () => {
       this.editing = false;
-    });
-
-    // remove focus from any input fields; fix for aria warning after modal close
-    const modal = document.getElementById('edit-event-modal');
-    modal.addEventListener('hide.bs.modal', () => {
+      // remove focus from any input fields; fix for aria warning after modal close
       document.activeElement?.blur();
     });
 
@@ -255,29 +254,37 @@ export default {
     },
     async saveChanges() {
       try {
-        // format dates for db (00:00:00 --> 23:59:59) and 
-        // (yyy-mmm-ddThh:mm:ss --> yyy-mmm-dd hh:mm:ss)
-        const data = {
-          ...this.editEvent,
-          start: toMySqlDateTime(this.editEvent.start),
-          end: toMySqlDateTime(this.editEvent.end),
-        };
         // All day?
         if (this.editEvent.allDay) {
-          data.start = data.start.split(' ')[0] + " 00:00:00";
-          data.end = data.start.split(' ')[0] + " 23:59:59";
+          const start = new Date(this.editEvent.start);
+          const end = new Date(this.editEvent.end);
+          start.setHours(0, 0, 0, 0);
+          end.setDate(start.getDate() + 1);
+          end.setHours(0, 0, 0, 0);
+          this.editEvent.start = start.toISOString().split("T")[0] + "T00:00:00";
+          this.editEvent.end = end.toISOString().split("T")[0] + "T00:00:00";
         }
         // if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return;
         // Parse IDs
-        if (this.editEvent.id) data.id = parseInt(this.editEvent.id);
-        if (this.editEvent.location_id) data.location_id = parseInt(this.editEvent.location_id);
-        if (this.editEvent.content_id) data.content_id = parseInt(this.editEvent.content_id);
+        if (this.editEvent.id) this.editEvent.id = parseInt(this.editEvent.id);
+        if (this.editEvent.location_id) this.editEvent.location_id = parseInt(this.editEvent.location_id);
+        if (this.editEvent.content_id) this.editEvent.content_id = parseInt(this.editEvent.content_id);
+        if (this.editEvent.employee_num) this.editEvent.employee_num = parseInt(this.editEvent.employee_num);
         // Company wide?
         if (this.editEvent.companyWide) {
-          data.location_id = null;
+          this.editEvent.location_id = null;
         }
-        if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return;
-        await this.$axios.post(this.$api + "events?update", data);
+        // If new type changed from employee to non-employee, reset employee_num
+        if (this.editEvent.type !== "employee" && this.editEvent.employee_num !== null) {
+          this.editEvent.employee_num = null;
+          console.log("Reset employee_num to null");
+        }
+        // if location_id is null, set companyWide to true
+        if (!this.editEvent.location_id) {
+          this.editEvent.companyWide = true;
+        }
+        if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(this.editEvent, null, 2))) return;
+        await this.$axios.post(this.$api + "events?update", this.editEvent);
         this.$emit("edited");
         Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
         this.toast.show("Event Updated", "The event has been successfully updated.", "bg-info-subtle text-info-emphasis");

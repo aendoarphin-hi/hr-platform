@@ -164,17 +164,13 @@ export default {
   async mounted() {
     try {
       this.$refs.modal.addEventListener("hidden.bs.modal", () => {
-        this.clearChanges();
+        this.editing = false;
+        // remove focus from any input fields; fix for aria warning after modal close
+        document.activeElement?.blur();
       });
 
       this.locations = (await this.$axios.get(this.$api + "locations?all=1")).data;
       this.employees = (await this.$axios.get(this.$api + "employees?all=1")).data;
-
-      // remove focus from any input fields; FIX for aria warning after modal close
-      const modal = document.getElementById('create-event-modal');
-      modal.addEventListener('hide.bs.modal', () => {
-        document.activeElement?.blur();
-      });
     } catch (error) {
       console.log(error);
     }
@@ -220,10 +216,11 @@ export default {
         }
         // is it one-day (allDay)?
         if (this.newEvent.allDay) {
-          this.newEvent.start = this.newEvent.start.split('T')[0] + ' 00:00:00';
-          this.newEvent.end = this.newEvent.start.split(' ')[0] + ' 23:59:59';
-          // console.log(this.newEvent.start);
-          // console.log(this.newEvent.end);
+          this.newEvent.start = this.newEvent.start.split('T')[0] + 'T00:00:00';
+          // increment end date to next day (from start) and set time to 00:00:00
+          const nextDay = new Date(this.newEvent.start).setDate(new Date(this.newEvent.start).getDate() + 1);
+          const parsedNextDay = new Date(nextDay).toISOString().split('T')[0] + 'T00:00:00';
+          this.newEvent.end = parsedNextDay;
         }
         // is it company-wide?
         if (this.newEvent.companyWide && this.newEvent.location_id) this.newEvent.location_id = null;
@@ -231,7 +228,7 @@ export default {
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
         this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
-        // if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
+        if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
         // post
         await this.$axios.post(this.$api + "events?new", this.newEvent);
         this.clearChanges();

@@ -72,7 +72,8 @@
     <EditEventModalComponent :event="selectedEvent" @edited="refreshCalendar" @deleted="refreshCalendar" />
     <CreateEventModalComponent :range="selectedDateRange" @created="refreshCalendar" />
     <!-- pop over create button on date drag -->
-    <div :hidden="!showPopover" @click="openCreateEvent" class="btn btn-sm btn-success small text-nowrap" id="create-event-popover"
+    <div :hidden="!showPopover" @click="openCreateEvent" class="btn btn-sm btn-success small text-nowrap"
+      id="create-event-popover"
       :style="{ left: dragged.style.left, top: dragged.style.top, position: 'absolute', zIndex: 999 }">
       + New Event
     </div>
@@ -219,6 +220,12 @@ export default {
     }
   },
   methods: {
+    isAllDay(s, e) {
+      const start = new Date(s)
+      const end = new Date(e)
+      return start.getHours() === 0 && start.getMinutes() === 0 && end.getHours() === 0 && end.getMinutes() === 0 &&
+        (end.getDate() - start.getDate() === 1)
+    },
     showAtMousPos(info) {
       this.dragged.style.left = info.jsEvent.clientX - 60 + "px";
       this.dragged.style.top = info.jsEvent.clientY + 40 + "px";
@@ -230,13 +237,6 @@ export default {
           document.getElementById('create-event-modal')
         ).show()
       })
-    },
-    isAllDay(start, end) {
-      const sDate = start.split(' ')[0]
-      const eDate = end.split(' ')[0]
-      const sTime = start.split(' ')[1]
-      const eTime = end.split(' ')[1]
-      return sDate === eDate && sTime === '00:00:00' && eTime === '23:59:59'
     },
     isCompanyWide(locationId) {
       if (locationId) {
@@ -260,24 +260,13 @@ export default {
       const processedEvents = events.map(e => {
         const event = { ...e }
 
-        // set calendar all day flag
+        // format date for calendar
+        event.start = new Date(e.start).toISOString()
+        event.end = new Date(e.end).toISOString()
+        // set fullcalendar allDay flag
         if (this.isAllDay(event.start, event.end)) {
-          const start = new Date(event.start.replace(' ', 'T'))
-          const end = new Date(start)
-
-          // FullCalendar uses an exclusive end date for all day events,
-          // so the end date is set to the next day at 00:00:00
-          // DB all-day timestamp -> `<DATE> 23:59:59`
-          // fullcalendar all-day timestamp `<NEXT DATE> 00:00:00`
-          end.setDate(end.getDate() + 1)
-
-          event.start = start
-          event.end = end
           event.allDay = true
-        } else {
-          event.allDay = false
         }
-
         // color code by event type/subtypes
         event.color = this.subtypeColors[event.subtype] ?? 'gray'
 
