@@ -1,6 +1,6 @@
 <template>
   <!-- modal -->
-  <div class="modal fade show" id="edit-event-modal" ref="editEventModal" tabindex="-1" role="dialog">
+  <div class="modal fade" id="edit-event-modal" ref="editEventModal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px">
       <div class="modal-content shadow">
         <div class="modal-header">
@@ -52,7 +52,7 @@
             {{ editEvent.description || "No description provided." }}
           </p>
           <!-- event editable fields -->
-          <textarea class="form-control form-control-sm mb-3" placeholder="What is this event about?" v-else
+          <textarea class="form-control form-control-sm mb-2" placeholder="What is this event about?" v-else
             v-model="editEvent.description" style="height: 150px; resize: none;">
           </textarea>
           <!-- employee selection if event type allows it -->
@@ -107,7 +107,7 @@
         </div>
         <div v-else class="modal-footer p-2">
           <button data-bs-dismiss="modal" class="btn btn-sm btn-secondary me-2">{{ editing ? 'Cancel' : 'Close'
-          }}</button>
+            }}</button>
           <button v-if="!editing" class="btn btn-sm btn-danger me-2" @click="confirmDelete = true" title="Delete">
             Delete
           </button>
@@ -137,6 +137,7 @@ import MapMarker from "vue-material-design-icons/MapMarker.vue";
 import { Modal } from "bootstrap";
 import { formatDate, formatDateTimeLocal, toMySqlDateTime } from "@/common/helpers";
 import { eventTypes } from "@/common/constants";
+import { store } from "@/common/store";
 
 export default {
   components: {
@@ -230,8 +231,8 @@ export default {
     });
 
     // fetch all available locations for the location select dropdown
-    this.locations = (await this.$axios.get(this.$api + 'locations?all=1')).data;
-    this.employees = (await this.$axios.get(this.$api + 'employees?all=1')).data;
+    this.locations = (await this.$axios.get(this.$api + 'locations?all')).data;
+    this.employees = (await this.$axios.get(this.$api + 'employees?all')).data;
   },
 
   methods: {
@@ -273,7 +274,6 @@ export default {
           this.editEvent.start = start.toISOString().split("T")[0] + "T00:00:00";
           this.editEvent.end = end.toISOString().split("T")[0] + "T00:00:00";
         }
-        // if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(data, null, 2))) return;
         // Parse IDs
         if (this.editEvent.id) this.editEvent.id = parseInt(this.editEvent.id);
         if (this.editEvent.location_id) this.editEvent.location_id = parseInt(this.editEvent.location_id);
@@ -292,7 +292,7 @@ export default {
         if (!this.editEvent.location_id) {
           this.editEvent.companyWide = true;
         }
-        if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(this.editEvent, null, 2))) return;
+        // if (!window.confirm("Do you want to save these changes?\n\n" + JSON.stringify(this.editEvent, null, 2))) return;
         await this.$axios.post(this.$api + "events?update", this.editEvent);
         this.$emit("edited");
         Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
@@ -310,7 +310,10 @@ export default {
       return updated;
     },
     async deleteEvent() {
-      try { // TODO: add log inserts
+      try {
+        // capture the event for logging
+        const toDelete = (await this.$axios.get(this.$api + "events?id=" + this.editEvent.id)).data[0];
+        // delete the event
         await this.$axios.post(this.$api + "events?delete", {
           id: this.editEvent.id
         });
@@ -318,6 +321,15 @@ export default {
         this.$emit("deleted")
         Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
         this.toast.show("Event Deleted", "The event has been successfully deleted.", "bg-info-subtle text-info-emphasis");
+        // log activity
+        console.log(toDelete);
+        await this.$axios.post(this.$api + "activity?new", {
+          enum: parseInt(store.authenticated.number),
+          action: "delete",
+          entity_type: "event",
+          entity_id: this.editEvent.id,
+          entity_json: JSON.stringify(toDelete)
+        })
       } catch (error) {
         console.error(error);
       }

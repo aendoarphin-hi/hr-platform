@@ -3,7 +3,7 @@
     <!-- help modal -->
     <HelpModalComponent>
       <p>
-        The calendar is used to schedule screen content for a specific date and time.
+        The calendar is used <strong>ONLY</strong> to schedule screen content for a specific date and time.
         Below is a list of possible event types and subtypes.
       </p>
       <div class="table-responsive">
@@ -15,10 +15,9 @@
             </tr>
           </thead>
           <tbody class="table-group-divider text-capitalize">
-            <tr v-for="t in typeFilters" :key="t">
+            <tr v-for="t in Object.keys(eventTypes)" :key="t">
               <td>{{ t }}</td>
-              <td>{{[...subtypeFilters].filter((s) => calendarOptions.events.find((e) => e.subtype === s && e.type ===
-                t)).join(', ')}}</td>
+              <td>{{ eventTypes[t].join(', ') }}</td>
             </tr>
           </tbody>
         </table>
@@ -152,6 +151,14 @@ export default {
       },
       selectedDateRange: null,
       showPopover: false,
+      allEvents: [],
+      filters: {
+        events: {
+          type: this.$route.query.type ?? "",
+          subtype: ""
+        }
+      },
+      /* fullcalendar calendar options  */
       calendarOptions: {
         plugins: [ // available calendar views
           themePlugin,
@@ -186,7 +193,7 @@ export default {
             end: info.end
           }
           this.showAtMousPos(info)
-          console.log(JSON.stringify(this.selectedDateRange, null, 2));
+          // console.log(JSON.stringify(this.selectedDateRange, null, 2));
         },
         unselect: () => {
           this.showPopover = false
@@ -210,13 +217,6 @@ export default {
           console.log('Raw event: ' + JSON.stringify(this.selectedEvent, null, 2))
         }
       },
-      allEvents: [],
-      filters: {
-        events: {
-          type: this.$route.query.type ?? "",
-          subtype: ""
-        }
-      }
     }
   },
   methods: {
@@ -247,7 +247,7 @@ export default {
     },
     async refreshCalendar() {
       try {
-        const res = await this.$axios.get(this.$api + "events?all=1")
+        const res = await this.$axios.get(this.$api + "events?all")
 
         this.events = res.data
         this.processRawEvents(this.events)
@@ -290,6 +290,9 @@ export default {
     },
   },
   computed: {
+    eventTypes() {
+      return eventTypes
+    },
     typeFilters() {
       return Object.keys(eventTypes)
     },
@@ -305,7 +308,7 @@ export default {
     try {
       this.initializing = true;
       // initializes event data
-      this.events = (await this.$axios.get(this.$api + "events?all=1")).data;
+      this.events = (await this.$axios.get(this.$api + "events?all")).data;
       this.processRawEvents(this.events);
       this.initializing = false;
     } catch (e) {

@@ -123,7 +123,7 @@
               class="small link-primary text-decoration-none">View Library
               &nbsp;▸</router-link>
           </div>
-          <div class="card-body">
+          <div class="card-body" v-if="recentUploads.length">
             <div class="row g-3">
               <template v-if="recentUploads.length > 0">
                 <div v-for="(u, i) in recentUploads" :key="i" class="col col-md-6">
@@ -139,10 +139,10 @@
                   </div>
                 </div>
               </template>
-              <div v-else class="card-body my-5 d-flex align-items-center justify-content-center text-muted">
-                <small>No Recent Uploads</small>
-              </div>
             </div>
+          </div>
+          <div v-else class="card-body my-5 d-flex align-items-center justify-content-center text-muted">
+            <small>No Recent Uploads</small>
           </div>
         </div>
 
@@ -381,10 +381,10 @@ export default {
       let desc;
 
       switch (entity) {
-        case 'playlists':
+        case 'playlist':
           desc = this.playlists.find((e) => e.id === a.entity_id)?.name;
           break;
-        case 'screens':
+        case 'screen':
           desc = this.screens.find((e) => e.id === a.entity_id)?.name;
           break;
         case 'content':
@@ -393,11 +393,16 @@ export default {
         case 'approval':
           desc = this.approvals.find((e) => e.id === a.entity_id)?.title;
           break;
-        case 'events':
+        case 'event':
           desc = this.events.find((e) => e.id === a.entity_id)?.title;
           break;
         default:
           break;
+      }
+      // if the action is 'delete' we'll need to get the captured json from that activity
+      // log and get the name of that deleted entity
+      if (a.action === "delete") {
+        desc = JSON.parse(a.entity_json).title;
       }
       return `${a.action}d ${entity}: ${desc}`;
     },
@@ -420,7 +425,7 @@ export default {
           ...a,
           name: employee ? employee.name : "Unknown",
         };
-      }).slice(0, 5).sort((a, b) => new Date(b.date) - new Date(a.date));
+      }).slice(0, 5).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     },
     employeeEvents() { // sort by event end date where the upcoming one is first, dont include past events
       return this.events.filter((event) => event.type === "employee" && new Date(event.end) >= new Date())
@@ -449,7 +454,7 @@ export default {
 
       await Promise.all(
         states.map(async d => {
-          this[d] = (await this.$axios.get(this.$api + d + "?all=1")).data;
+          this[d] = (await this.$axios.get(this.$api + d + "?all")).data;
         })
       );
 

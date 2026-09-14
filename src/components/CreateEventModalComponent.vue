@@ -15,7 +15,7 @@
           <div class="modal-body">
             <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
               <!-- error message -->
-              <div v-if="error" class="mb-3 p-2 small rounded bg-danger-subtle text-danger-emphasis">
+              <div v-if="error" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
                 {{ error }}
               </div>
             </transition>
@@ -25,7 +25,7 @@
             <!-- event creation fields -->
             <!-- title text -->
             <div class="w-100">
-              <input required type="text" class="form-control form-control-sm mb-3" placeholder="Event Title"
+              <input required type="text" class="form-control form-control-sm mb-2" placeholder="Event Title"
                 id="event-create-title" v-model="newEvent.title" />
             </div>
 
@@ -49,7 +49,7 @@
             </div>
             <label for="event-create-employee" class="small">Employee events can be tied to a specific employee</label>
             <!-- employee selection if type is employee -->
-            <div class="mb-3">
+            <div class="mb-2">
               <select :disabled="newEvent.type !== 'employee'" id="event-create-employee"
                 class="form-select form-select-sm" v-model="newEvent.employee_num">
                 <option :value="null">Select Employee</option>
@@ -61,7 +61,7 @@
             </div>
 
             <!-- description text -->
-            <div class="mb-3">
+            <div class="mb-2">
               <textarea id="event-create-description" class="form-control form-control-sm"
                 style="min-height: 100px; resize: none;" v-model="newEvent.description"
                 placeholder="What is this event about? (optional)"></textarea>
@@ -71,7 +71,7 @@
               The start and end date/time of the event will determine how long the content will be visible.
             </p>
             <!-- date range -->
-            <div class="mb-3 d-flex flex-row flex-wrap gap-2 w-100">
+            <div class="mb-2 d-flex flex-row gap-2 w-100">
               <div class="col">
                 <label for="event-create-start-date" class="small">Start</label>
                 <input required type="datetime-local" step="1" class="text-uppercase form-control form-control-sm"
@@ -129,6 +129,7 @@
 
 <script>
 import { eventTypes } from "@/common/constants";
+import { store } from "@/common/store";
 import { Modal } from "bootstrap";
 
 export default {
@@ -173,8 +174,8 @@ export default {
         }
       });
 
-      this.locations = (await this.$axios.get(this.$api + "locations?all=1")).data;
-      this.employees = (await this.$axios.get(this.$api + "employees?all=1")).data;
+      this.locations = (await this.$axios.get(this.$api + "locations?all")).data;
+      this.employees = (await this.$axios.get(this.$api + "employees?all")).data;
     } catch (error) {
       console.log(error);
     }
@@ -232,13 +233,27 @@ export default {
         this.newEvent.location_id = this.newEvent.location_id ? parseInt(this.newEvent.location_id) : null;
         this.newEvent.employee_num = this.newEvent.employee_num ? parseInt(this.newEvent.employee_num) : null;
         this.newEvent.content_id = this.newEvent.content_id ? parseInt(this.newEvent.content_id) : null;
-        if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
+        // if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
         // post
         await this.$axios.post(this.$api + "events?new", this.newEvent);
         this.clearChanges();
         Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
         this.$emit("created")
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
+        // log activity
+        await this.$axios.post(this.$api + "activity?new", {
+          enum: parseInt(store.authenticated.number),
+          action: "create",
+          entity_type: "event",
+        })
+        // update the null entity_id value in the new activity log
+        const latestEvent = (await this.$axios.get(this.$api + "events?all")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
+        const latestActivity = (await this.$axios.get(this.$api + "activity?all")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
+        await this.$axios.post(this.$api + "activity?update", {
+          column: "entity_id",
+          value: latestEvent,
+          id: latestActivity,
+        })
       } catch (error) {
         this.error = "Error creating event: " + error;
         console.error(error);
@@ -256,9 +271,23 @@ export default {
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     },
     validateDates() {
-      if (new Date(this.newEvent.start) > new Date(this.newEvent.end) ||
-        this.newEvent.start === this.newEvent.end) {
-        this.newEvent.end = ''; this.error = "Date and time cannot overlap or be the same.";
+      this.allDay = false;
+      // user selected one day (via calendar or form input)
+      if (!this.newEvent.end && this.newEvent.start) {
+        this.newEvent.end = "";
+        this.newEvent.allDay = true;
+      }
+      // start date is after end date
+      if (this.newEvent.start && this.newEvent.end && new Date(this.newEvent.start) > new Date(this.newEvent.end)) {
+        this.error = "Start date must be before end date.";
+      } else {
+        this.error = "";
+      }
+      // start is same as end
+      if ((this.newEvent.start && this.newEvent.end) && this.newEvent.start === this.newEvent.end) {
+        this.error = "Start date and end date must be different.";
+      } else {
+        this.error = "";
       }
     }
   },
@@ -286,11 +315,6 @@ export default {
         } else {
           this.newEvent.location_id = this.locations[0].id;
         }
-      },
-    },
-    'newEvent.allDay': {
-      handler(newValue) {
-        this.validateDates(newValue);
       },
     },
     range: {

@@ -3,7 +3,14 @@ import { markRaw, nextTick } from "vue";
 import { config } from "@/common/config.js";
 
 // views
-import DashboardView from "../views/DashboardView.vue";
+import DashboardView from "@/views/DashboardView.vue";
+import ScreensView from "@/views/ScreensView.vue";
+import CalendarView from "@/views/CalendarView.vue";
+import Approvals from "@/views/Approvals.vue";
+import ProfileView from "@/views/ProfileView.vue";
+import AuthView from "@/views/AuthView.vue";
+import UnauthorizedView from "@/views/UnauthorizedView.vue";
+import TestView from "@/views/TestView.vue";
 
 // icons
 import ViewDashboard from "vue-material-design-icons/ViewDashboard.vue";
@@ -32,47 +39,47 @@ const routes = [
   {
     path: "/screens",
     name: "Screens",
-    component: () => import("../views/ScreensView.vue"),
+    component: <ScreensView />,
     active: true,
     icon: markRaw(Television),
   },
   {
     path: "/calendar",
     name: "Calendar",
-    component: () => import("../views/CalendarView.vue"),
+    component: <CalendarView />,
     active: true,
     icon: markRaw(CalendarMonth),
   },
   {
     path: "/approvals",
     name: "Approvals",
-    component: () => import("../views/Approvals.vue"),
+    component: <Approvals />,
     active: true,
     icon: markRaw(AccountClock),
   },
   {
     path: "/profile",
     name: "Profile",
-    component: () => import("../views/ProfileView.vue"),
+    component: <ProfileView />,
     active: false,
     icon: markRaw(AccountCircle),
   },
   {
     path: "/auth",
     name: "Auth",
-    component: () => import("../views/AuthView.vue"),
+    component: <AuthView />,
     active: false,
   },
   {
     path: "/unauthorized",
     name: "Unauthorized",
-    component: () => import("../views/NotAllowedView.vue"),
+    component: <UnauthorizedView />,
     active: false,
   },
   {
     path: "/test",
     name: "Test",
-    component: () => import("../views/TestView.vue"),
+    component: <TestView />,
     active: false,
   },
   {

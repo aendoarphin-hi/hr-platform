@@ -80,7 +80,7 @@
       <!-- tab views -->
       <div class="tab-content">
         <!-- =======================  SCREENS TAB VIEW   =============================== -->
-        <div class="tab-pane fade show" :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
+        <div class="tab-pane px-0 fade show" :class="activeTab === 'screens' ? 'show active' : ''" id="screens">
           <!-- filters, sort, view toggle row -->
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <!-- Filters -->
@@ -220,9 +220,9 @@
           </div>
         </div>
         <!-- =======================  PLAYLIST TAB VIEW   =============================== -->
-        <div class="tab-pane fade" :class="activeTab === 'playlists' ? 'show active' : ''" id="playlists">
+        <div class="tab-pane px-0 fade" :class="activeTab === 'playlists' ? 'show active' : ''" id="playlists">
           <!-- sort, view toggle row -->
-          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <!-- search bar 1 -->
             <input type="search" class="form-control form-control-sm col d-none d-xl-block" placeholder="Search"
               v-model="search" />
@@ -328,8 +328,8 @@
           </div>
         </div>
         <!-- =======================  CONTENT TAB VIEW   =============================== -->
-        <div class="tab-pane fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
-          <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <div class="tab-pane px-0 fade" :class="activeTab === 'content' ? 'show active' : ''" id="content">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <!-- Filters -->
             <div class="hstack gap-2">
               <small>
@@ -677,7 +677,7 @@ export default {
       return l.replace(/_/g, " ");
     },
     async fetchEndpoint(endpoint) {
-      const res = await this.$axios.get(this.$api + endpoint + "?all=1");
+      const res = await this.$axios.get(this.$api + endpoint + "?all");
       switch (endpoint) {
         case "screens":
           this.rawScreens = res.data;
@@ -738,7 +738,7 @@ export default {
       }
 
       // get all locations
-      this.locations = (await this.$axios.get(this.$api + "locations?all=1")).data;
+      this.locations = (await this.$axios.get(this.$api + "locations?all")).data;
 
       await Promise.all(this.endpoints.map((endpoint) => this.fetchEndpoint(endpoint)));
 
