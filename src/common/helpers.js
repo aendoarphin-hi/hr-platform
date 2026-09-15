@@ -93,6 +93,52 @@ export function formatTimeAgo(timestamp) {
 }
 
 /**
+ * Formats a timestamp into a human-readable string
+ * @param {string} timestamp - timestamp string (ISO foramt)
+ * @returns {string} formatted string
+ */
+export function formatTimeFromNow(timestamp) {
+  const then = new Date(timestamp);
+  const now = new Date();
+
+  const diffMs = then - now;
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMs < 0) {
+    return "Past";
+  }
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) {
+    return `In ${diffMins} min${diffMins !== 1 ? "s" : ""}`;
+  }
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) {
+    return `In ${diffHours} hr${diffHours !== 1 ? "s" : ""}`;
+  }
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const date = new Date(then.getFullYear(), then.getMonth(), then.getDate());
+  const diffDays = Math.round((date - today) / 86400000);
+
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays < 7) return `In ${diffDays} days`;
+  if (diffDays < 14) return "Next week";
+
+  if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return `In ${weeks} weeks`;
+  }
+
+  return then.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+/**
  * Extracts date parts from a timestamp.
  * @param {string} value - timestamp string
  * @returns {Object} date parts
@@ -107,17 +153,6 @@ function getDateTimeParts(value) {
   const seconds = String(date.getSeconds()).padStart(2, "0");
 
   return { year, month, day, hours, minutes, seconds };
-}
-
-/**
- * Formats date string to `yyyy-mm-dd hh:mm:ss`
- * @param {string} value - timestamp string
- * @returns {string} formatted mysql DATETIME
- */
-export function toMySqlDateTime(value) {
-  if (!value) return null;
-  const { year, month, day, hours, minutes, seconds } = getDateTimeParts(value);
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -139,4 +174,21 @@ export function formatDateTimeLocal(value) {
 export function formatDate(value) { // formats to mm/dd/yyyy
   if (!value) return "-";
   return new Date(value).toLocaleDateString();
+}
+
+/**
+ * Prevents focus from moving into a modal when the close button is clicked.
+ * Fix for aria console warnings.
+ * @param {Object} modalRef - modal DOM element
+ */
+export function clearModalFocus(modalRef) {
+  modalRef.addEventListener("hide.bs.modal", () => {
+    // move focus out of the modal BEFORE Bootstrap sets aria-hidden="true" on it.
+    // otherwise, if the clicked close button still holds focus (a descendant of the
+    // modal), the browser blocks aria-hidden and logs:
+    // "Blocked aria-hidden on an element because its descendant retained focus."
+    if (document.activeElement && modalRef.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  });
 }
