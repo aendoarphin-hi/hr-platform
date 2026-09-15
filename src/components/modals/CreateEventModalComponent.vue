@@ -129,7 +129,6 @@
 
 <script>
 import { eventTypes } from "@/common/constants";
-import { store } from "@/common/store";
 import { Modal } from "bootstrap";
 
 export default {
@@ -141,7 +140,7 @@ export default {
     range: Object
   },
 
-  inject: ["toast"],
+  inject: ["toast", "store"],
 
   data() {
     return {
@@ -164,6 +163,9 @@ export default {
   },
   async mounted() {
     try {
+      // in dashboard, user can make announcement event so prefill the type
+      if (this.$route.name === "Dashboard") this.newEvent.type = "announcement";
+      
       this.$refs.createEventModal.addEventListener("hidden.bs.modal", () => {
         this.editing = false;
       });
@@ -242,7 +244,7 @@ export default {
         this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
         // log activity
         await this.$axios.post(this.$api + "activity?new", {
-          enum: parseInt(store.authenticated.number),
+          enum: parseInt(this.store.authenticated.number),
           action: "create",
           entity_type: "event",
         })

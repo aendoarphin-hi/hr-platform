@@ -2,44 +2,42 @@
   <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
-      <h5>Navigating</h5>
+      <h5>Navigation</h5>
       <p>Use the tabs to navigate between <strong>Screens, Playlists, Content</strong>.</p>
       <h5>Screens</h5>
       <p>
-        Each screen device (screen) can be edited (
-        <Pencil />) and assigned a playlist, which contains a set of ordered images (content) to be presented.
-        Online or disabled devices can also be rebooted (
-        <Restart />) or previewed (
-        <OpenInNew />)
+        Each available screen can be edited (<Pencil />) 
+        and assigned a playlist containing a sequence of images (content) to be presented.
+        Online or disabled devices can also be previewed (<OpenInNew />)
       </p>
       <h5>Screen Status</h5>
       <span :class="statusBadgeClass('online')" class="badge">Online</span><small> - Screen is fully operational and
         all actions can be applied.</small><br />
       <span :class="statusBadgeClass('offline')" class="badge">Offline</span><small> - Changes cannot be applied to
-        screen.</small><br />
-      <span :class="statusBadgeClass('disabled')" class="badge">Disabled</span><small> - Screen has been suspended. No
-        content will be shown.</small><br /><br />
+        screen because the device is currently down.</small><br />
+      <span :class="statusBadgeClass('disabled')" class="badge">Disabled</span><small> - Screen is unavailable. No
+        content will be shown and no actions can be applied.</small><br /><br />
       <h5>Playlists</h5>
       <p>
-        Playlists can be edited (
-        <Pencil />) and assigned to a screen. Playlists contain a set of ordered images (content) to be presented.
-        Each playlist is created by a user with <span class="btn btn-sm btn-success small">
+        Playlists can be edited (<Pencil />) 
+        and assigned to a screen. Playlists contain a set of ordered images (content) to be presented.
+        Each playlist is created by a user with <span class="btn btn-sm btn-success small" style="font-size: 10px;">
           <PlaylistPlay /> New Playlist
         </span>
       </p>
       <h5>Content</h5>
       <p>
-        Content can be edited (
-        <Pencil />) and added to a playlist. Content uploads will undergo approval before they can be added to a
+        Content can be edited (<Pencil />) 
+        and added to a playlist. Content uploads will undergo approval before they can be added to a
         playlist.
-        Upload new content with <span class="btn btn-sm btn-primary small">
+        Upload new content with <span class="btn btn-sm btn-primary small" style="font-size: 10px;">
           <UploadBox /> Upload Content
         </span>
       </p>
       <h5>Group Permissions</h5>
       <small>
-        <strong>System</strong> - All actions allowed, with additional backend configuration options for screen
-        devices<br />
+        <strong>System</strong> - All actions allowed, with additional backend configuration options for screens
+        <br />
         <strong>HR</strong> - Manage events, screens, playlists, content, and approvals<br />
         <strong>Supervisors</strong> - Upload content and create new playlists
       </small>
@@ -57,12 +55,15 @@
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
         <!-- add any toolbar buttons here if needed in the future -->
-        <div class="btn btn-sm btn-success">
+        <button class="btn btn-sm btn-success">
           <PlaylistPlay /> New Playlist
-        </div>
-        <div class="btn btn-sm btn-primary" @click="openUploadModal">
+        </button>
+        <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
-        </div>
+        </button>
+        <button v-if="inSystemGroup" class="btn btn-sm btn-secondary" @click="openConfigureModal">
+          <Cog /> Configure Screens
+        </button>
 
       </div>
     </div>
@@ -508,10 +509,11 @@ import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import UploadBox from "vue-material-design-icons/UploadBox.vue";
 import Television from "vue-material-design-icons/Television.vue";
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
+import Cog from "vue-material-design-icons/Cog.vue";
 
 import { filterByField, searchByText, sortByField } from "@/common/helpers";
 import { Modal } from "bootstrap";
-import UploadContentModalComponent from "@/components/UploadContentModalComponent.vue";
+import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 
 export default {
   name: "ScreenView",
@@ -536,9 +538,11 @@ export default {
     UploadBox,
     Television,
     FilterOffOutline,
+    Cog,
 
     UploadContentModalComponent,
   },
+  inject: ["store"],
   data() {
     return {
       initializing: true, // loading state
@@ -580,6 +584,9 @@ export default {
     };
   },
   computed: {
+    inSystemGroup() {
+      return Object.values(this.store.authenticated.groups).includes("HR Comms System");
+    },
     uniqueContentTypes() {
       // distinct options for content type filter
       return [...new Set([...this.rawContent].map((c) => c.type))].sort();

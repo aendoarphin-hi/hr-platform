@@ -25,6 +25,7 @@
 import SidebarComponent from "@/components/SidebarComponent.vue";
 import AuthView from "@/views/AuthView.vue";
 import ToastComponent from "@/components/ToastComponent.vue";
+import { store } from "@/common/store";
 
 export default {
   components: {
@@ -38,7 +39,8 @@ export default {
         show: (title, message, classList) => {
           this.$refs.toast.showToast(title, message, classList);
         }
-      }
+      },
+      store: store
     };
   },
   data() {

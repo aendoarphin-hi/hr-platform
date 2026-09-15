@@ -12,7 +12,7 @@ import "animate.css";
 
 // common components
 import LoadingComponent from "@/components/LoadingComponent.vue";
-import HelpModalComponent from "@/components/HelpModalComponent.vue";
+import HelpModalComponent from "@/components/modals/HelpModalComponent.vue";
 
 // app utilities
 import { debounce } from "@/common/helpers.js";

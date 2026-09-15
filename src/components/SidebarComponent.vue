@@ -2,9 +2,9 @@
   <aside id="sidebar" :class="{ 'collapsed': !isOpen }">
     <router-link id="sidebar-header" to="/dashboard" class="d-flex align-items-center text-decoration-none mx-auto">
       <img src="@/assets/img/hayden-blue.svg" alt="Hayden Logo" class="me-2" />
-      <span class="fs-4 text-dark text-nowrap"><strong>HAYDEN</strong> {{ this.$appname }}</span>
+      <span class="fs-4 text-dark text-nowrap"><strong>HAYDEN</strong> {{ $appname }}</span>
     </router-link>
-    <span class="w-100 text-center text-muted" style="font-size: 10px;">v{{ this.$version }}</span>
+    <span class="w-100 text-center text-muted" style="font-size: 10px;">v{{ $version }}</span>
     <hr />
     <ul class="nav nav-pills flex-column mb-auto gap-1">
       <li v-for="route in routes" :key="route.name" class="nav-item">
@@ -47,7 +47,6 @@ import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
 import ChevronRight from "vue-material-design-icons/ChevronRight.vue";
 import ChevronLeft from "vue-material-design-icons/ChevronLeft.vue";
 import Logout from "vue-material-design-icons/Logout.vue";
-import { store } from "@/common/store";
 
 export default {
   name: "Sidebar",
@@ -64,6 +63,7 @@ export default {
       routes: [],
     };
   },
+  inject: ["store"],
 
   async mounted() {
     this.routes = this.$router.options.routes.filter(
@@ -73,7 +73,7 @@ export default {
 
   computed: {
     user() {
-      return store.authenticated;
+      return this.store.authenticated;
     },
   },
 };

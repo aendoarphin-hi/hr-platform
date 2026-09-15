@@ -2,7 +2,7 @@
   <div class="card border border-danger my-auto p-4" style="max-width: 500px;">
     <div class="d-flex flex-row justify-content-center">
       <img src="@/assets/img/hayden-blue.svg" width="90" alt="Hayden Logo" />&nbsp;&nbsp;
-      <span class="fs-1 text-dark text-nowrap"><strong>HAYDEN</strong> {{ this.$appname }}</span>
+      <span class="fs-1 text-dark text-nowrap"><strong>HAYDEN</strong> {{ $appname }}</span>
     </div><br />
 
     <h5 class="text-center">Unauthorized Access</h5>

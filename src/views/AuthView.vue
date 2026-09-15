@@ -2,7 +2,7 @@
   <div class="card border border-primary my-auto p-4" style="max-width: 500px;">
     <div class="d-flex flex-row justify-content-center">
       <img src="@/assets/img/hayden-blue.svg" width="90" alt="Hayden Logo" />&nbsp;&nbsp;
-      <span class="fs-1 text-dark text-nowrap"><strong>HAYDEN</strong> {{ this.$appname }}</span>
+      <span class="fs-1 text-dark text-nowrap"><strong>HAYDEN</strong> {{ $appname }}</span>
     </div><br />
     <h5 class="text-center">Authentication Required</h5>
     <Lock class="text-body-tertiary" style="font-size: 100px;" />
@@ -21,11 +21,11 @@
 </template>
 
 <script>
-import { store } from '@/common/store';
 import Lock from 'vue-material-design-icons/Lock.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 
 export default {
+  inject: ['store'],
   components: {
     Lock,
     OpenInNew
@@ -36,7 +36,7 @@ export default {
     }
   },
   mounted() {
-    this.authStatus = store.authenticated
+    this.authStatus = this.store.authenticated
   },
   watch: { // if user's already authenticated, force redirect to dashboard
     authStatus: {

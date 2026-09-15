@@ -2,7 +2,7 @@
   <div v-if="!loading" :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
-      <h5><strong>HAYDEN</strong> {{ this.$appname }}</h5>
+      <h5><strong>HAYDEN</strong> {{ $appname }}</h5>
       <p>
         In the dashboard, you can view a summary of recent changes to events and track the status of screens. Each
         section also contains direct links to
@@ -207,7 +207,7 @@
                     <div class="lh-sm small">
                       <span class="fw-semibold">{{ a.name }}</span> {{ activityDescription(a) }}
                     </div>
-                    <div class="text-muted small text-nowrap">{{ formatTimeAgo(a.created_at) }}</div>
+                    <div class="text-muted small text-nowrap ms-auto">{{ formatTimeAgo(a.created_at) }}</div>
                   </div>
                 </div>
               </div>
@@ -219,7 +219,7 @@
         </div>
       </div>
     </div>
-    <CreateEventModalComponent :preset="announcementPreset" />
+    <CreateEventModalComponent />
   </div>
   <div v-else class="d-flex justify-content-center align-items-center">
     <LoadingComponent message="Loading dashboard..." />
@@ -243,11 +243,10 @@ import FileDocument from "vue-material-design-icons/FileDocument.vue";
 import Calendar from "vue-material-design-icons/Calendar.vue";
 import ExclamationThick from "vue-material-design-icons/ExclamationThick.vue";
 
-import CreateEventModalComponent from "../components/CreateEventModalComponent.vue";
-import LoadingComponent from "../components/LoadingComponent.vue";
+import CreateEventModalComponent from "@/components/modals/CreateEventModalComponent.vue";
+import LoadingComponent from "@/components/LoadingComponent.vue";
 
 import { markRaw } from "vue";
-import { store } from "@/common/store";
 import { formatTimeAgo } from "@/common/helpers";
 import { Modal } from "bootstrap";
 
@@ -287,23 +286,18 @@ export default {
       loading: false,
       quickStats: [],
       needsAttention: [],
-      announcementPreset: {}, // prefill values for announcement
     };
   },
   methods: {
     openCreateModal() {
-      this.announcementPreset = {
-        type: "announcement",
-        status: "general",
-      };
       Modal.getOrCreateInstance(
         document.getElementById("create-event-modal")
       ).show();
     },
     formatTimeAgo,
     setValue() {
-      store.authenticated = false;
-      window.alert(store.authenticated);
+      this.store.authenticated = false;
+      window.alert(this.store.authenticated);
     },
     handleScroll() {
       const currentScrollY = window.scrollY;
@@ -425,7 +419,7 @@ export default {
           ...a,
           name: employee ? employee.name : "Unknown",
         };
-      }).slice(0, 5).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5);
     },
     employeeEvents() { // sort by event end date where the upcoming one is first, dont include past events
       return this.events.filter((event) => event.type === "employee" && new Date(event.end) >= new Date())

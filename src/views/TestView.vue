@@ -1,14 +1,14 @@
 <template>
   <div>
-    {{ typeof store.authenticated.number }}
+    {{ store.authenticated.number }}
   </div>
 </template>
 <script>
-import { store } from '@/common/store'
 export default {
+  inject: ['store'],
   data() {
     return {
-      store
+      store: this.store
     }
   },
 }

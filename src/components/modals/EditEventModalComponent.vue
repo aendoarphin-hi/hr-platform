@@ -135,9 +135,8 @@ import Floppy from "vue-material-design-icons/Floppy.vue";
 import CalendarRangeOutline from "vue-material-design-icons/CalendarRangeOutline.vue";
 import MapMarker from "vue-material-design-icons/MapMarker.vue";
 import { Modal } from "bootstrap";
-import { formatDate, formatDateTimeLocal, toMySqlDateTime } from "@/common/helpers";
+import { formatDate, formatDateTimeLocal } from "@/common/helpers";
 import { eventTypes } from "@/common/constants";
-import { store } from "@/common/store";
 
 export default {
   components: {
@@ -149,7 +148,7 @@ export default {
   props: {
     event: Object, // original event from calendar
   },
-  inject: ["toast"],
+  inject: ["toast", "store"],
   emits: ["edited", "deleted"],
   data() {
     return {
@@ -297,6 +296,14 @@ export default {
         this.$emit("edited");
         Modal.getOrCreateInstance(document.getElementById('edit-event-modal')).hide();
         this.toast.show("Event Updated", "The event has been successfully updated.", "bg-info-subtle text-info-emphasis");
+        // log activity
+        await this.$axios.post(this.$api + "activity?new", {
+          enum: parseInt(this.store.authenticated.number),
+          action: "update",
+          entity_type: "event",
+          entity_id: this.editEvent.id,
+          enity_json: null
+        })
         this.resetChanges();
       } catch (error) {
         console.error("Error saving changes:", error);
@@ -324,7 +331,7 @@ export default {
         // log activity
         console.log(toDelete);
         await this.$axios.post(this.$api + "activity?new", {
-          enum: parseInt(store.authenticated.number),
+          enum: parseInt(this.store.authenticated.number),
           action: "delete",
           entity_type: "event",
           entity_id: this.editEvent.id,
