@@ -1,5 +1,5 @@
 <template>
-    <div id="global-toast" :class="classList" class="toast align-items-center position-fixed bottom-0 end-0 m-3" role="alert">
+    <div id="global-toast" :class="classList" class="toast align-items-center position-fixed bottom-0 end-0 m-3">
       <div class="d-flex">
         <div class="toast-body">
           <strong>{{ title }}</strong>

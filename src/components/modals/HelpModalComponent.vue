@@ -15,17 +15,11 @@
 </template>
 
 <script>
+import { clearModalFocus } from '@/common/helpers';
+
 export default {
   mounted() {
-    this.$refs.helpModal.addEventListener("hide.bs.modal", () => {
-      // move focus out of the modal BEFORE Bootstrap sets aria-hidden="true" on it.
-      // otherwise, if the clicked close button still holds focus (a descendant of the
-      // modal), the browser blocks aria-hidden and logs:
-      // "Blocked aria-hidden on an element because its descendant retained focus."
-      if (document.activeElement && this.$refs.helpModal.contains(document.activeElement)) {
-        document.activeElement.blur();
-      }
-    });
+    clearModalFocus(this.$refs.helpModal);
   }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
   <!-- modal -->
   <form @submit.prevent="createEvent">
-    <div class="modal fade" id="create-event-modal" ref="createEventModal" tabindex="-1" role="dialog">
+    <div class="modal fade" id="create-event-modal" ref="createEventModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
         <div class="modal-content shadow">
           <div class="modal-header">
@@ -129,6 +129,7 @@
 
 <script>
 import { eventTypes } from "@/common/constants";
+import { clearModalFocus } from "@/common/helpers";
 import { Modal } from "bootstrap";
 
 export default {
@@ -165,16 +166,12 @@ export default {
     try {
       // in dashboard, user can make announcement event so prefill the type
       if (this.$route.name === "Dashboard") this.newEvent.type = "announcement";
-      
+
       this.$refs.createEventModal.addEventListener("hidden.bs.modal", () => {
         this.editing = false;
       });
 
-      this.$refs.createEventModal.addEventListener("hide.bs.modal", () => {
-        if (document.activeElement && this.$refs.createEventModal.contains(document.activeElement)) {
-          document.activeElement.blur();
-        }
-      });
+      clearModalFocus(this.$refs.createEventModal);
 
       this.locations = (await this.$axios.get(this.$api + "locations?all")).data;
       this.employees = (await this.$axios.get(this.$api + "employees?all")).data;

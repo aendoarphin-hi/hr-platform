@@ -3,9 +3,10 @@ import axios from "axios";
 import App from "@/App.vue";
 import router from "@/router";
 
-// styles
+// styles/component libraries
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 import "vue-material-design-icons/styles.css";
 import "./assets/styles/main.scss";
 import "animate.css";

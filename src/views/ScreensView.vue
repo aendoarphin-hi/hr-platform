@@ -70,10 +70,10 @@
     <!-- main content -->
     <div class="card p-3">
       <!-- tabs -->
-      <ul class="nav nav-tabs" id="screens-tab-list" role="tablist">
-        <li v-for="endpoint in endpoints" :key="endpoint" class="nav-item" role="presentation">
+      <ul class="nav nav-tabs" id="screens-tab-list">
+        <li v-for="endpoint in endpoints" :key="endpoint" class="nav-item">
           <button class="nav-link text-capitalize" :class="activeTab === endpoint ? 'active' : ''"
-            @click="activeTab = endpoint; search = ''" :id="`${endpoint}-tab`" type="button" role="tab">
+            @click="activeTab = endpoint; search = ''" :id="`${endpoint}-tab`" type="button">
             {{ endpoint }}
           </button>
         </li>
@@ -124,7 +124,7 @@
               </select>
             </div>
             <!-- view toggle for grid/list -->
-            <div class="btn-group btn-group-sm" role="group">
+            <div class="btn-group btn-group-sm">
               <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
                 title="List view" @click="viewMode = 'list'">
                 <ViewList />
@@ -242,7 +242,7 @@
               </select>
             </div>
             <!-- view toggle for grid/list -->
-            <div class="btn-group btn-group-sm" role="group">
+            <div class="btn-group btn-group-sm">
               <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
                 title="List view" @click="viewMode = 'list'">
                 <ViewList />
@@ -372,7 +372,7 @@
               </select>
             </div>
             <!-- view toggle for grid/list -->
-            <div class="btn-group btn-group-sm" role="group">
+            <div class="btn-group btn-group-sm">
               <button type="button" class="btn" :class="viewMode === 'list' ? 'btn-primary' : 'btn-outline-secondary'"
                 title="List view" @click="viewMode = 'list'">
                 <ViewList />
@@ -514,6 +514,7 @@ import Cog from "vue-material-design-icons/Cog.vue";
 import { filterByField, searchByText, sortByField } from "@/common/helpers";
 import { Modal } from "bootstrap";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
+import { nextTick } from "vue";
 
 export default {
   name: "ScreenView",
@@ -628,7 +629,10 @@ export default {
   },
   methods: {
     openUploadModal() {
-      Modal.getOrCreateInstance(document.getElementById("upload-content-modal")).show();
+      nextTick(() => {
+        Modal.getOrCreateInstance(document.getElementById("upload-content-modal")).show();
+        this.activeTab = "content";
+      })
     },
     clearFilters() {
       this.filters = {
