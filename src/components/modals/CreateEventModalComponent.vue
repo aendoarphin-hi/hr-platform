@@ -235,16 +235,17 @@ export default {
         // if (!window.confirm("Do you want to create this event?\n\n" + JSON.stringify({ ...this.newEvent }, null, 2))) return;
         // post
         await this.$axios.post(this.$api + "events?new", this.newEvent);
-        this.clearChanges();
-        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
-        this.$emit("created")
-        this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
         // log activity
         await this.$axios.post(this.$api + "activity?new", {
           enum: parseInt(this.store.authenticated.number),
           action: "create",
           entity_type: "event",
+          entity_json: JSON.stringify(this.newEvent)
         })
+        this.clearChanges();
+        Modal.getOrCreateInstance(document.getElementById('create-event-modal')).hide();
+        this.$emit("created")
+        this.toast.show("Event Created", "The event has been successfully created.", "bg-success-subtle text-success-emphasis");
         // update the null entity_id value in the new activity log
         const latestEvent = (await this.$axios.get(this.$api + "events?all")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;
         const latestActivity = (await this.$axios.get(this.$api + "activity?all")).data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0].id;

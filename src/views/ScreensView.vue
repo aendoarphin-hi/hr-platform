@@ -66,7 +66,7 @@
           <UploadBox /> Upload Content
         </button>
         <RouterLink to="configuration">
-        <button v-if="inSystemGroup" class="btn btn-sm btn-secondary">
+        <button v-if="inSystemGroup()" class="btn btn-sm btn-secondary">
           <Cog /> Configure Screens
         </button>
         </RouterLink>
@@ -170,10 +170,10 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(d, i) in screens" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
+                <tr v-for="(s, i) in screens" :key="s.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                   <td class="fw-semibold"
                     style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
-                    {{ d.name }}
+                    {{ s.name }}
                   </td>
                   <td>{{ d.location }}</td>
                   <td>
@@ -203,19 +203,19 @@
           <div v-else-if="!initializing && viewMode === 'grid'"
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
-            <div v-for="(d, i) in screens" :key="d.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
+            <div v-for="(s, i) in screens" :key="s.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1"
               class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
-                  <Television /> {{ d.name }}
+                  <Television /> {{ s.name }}
                 </div>
                 <span>
                   <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
                 </span>
-                <span v-if="d.playlist_id" class="text-muted">
+                <span v-if="s.playlist_id" class="text-muted">
                   <PlaylistPlay /> {{ getPlaylistName(d.playlist_id) }}
                 </span>
-                <span v-if="d.location" class="text-muted">
+                <span v-if="s.location" class="text-muted">
                   <MapMarker /> {{ d.location }}
                 </span>
               </div>
@@ -516,7 +516,7 @@ import Television from "vue-material-design-icons/Television.vue";
 import FilterOffOutline from "vue-material-design-icons/FilterOffOutline.vue";
 import Cog from "vue-material-design-icons/Cog.vue";
 
-import { filterByField, searchByText, sortByField } from "@/common/helpers";
+import { filterByField, inSystemGroup, searchByText, sortByField } from "@/common/helpers";
 import { Modal } from "bootstrap";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 import { nextTick } from "vue";
@@ -590,9 +590,6 @@ export default {
     };
   },
   computed: {
-    inSystemGroup() {
-      return Object.values(this.store.authenticated.groups).includes("HR Comms System");
-    },
     uniqueContentTypes() {
       // distinct options for content type filter
       return [...new Set([...this.rawContent].map((c) => c.type))].sort();
@@ -639,6 +636,7 @@ export default {
         this.activeTab = "content";
       })
     },
+    inSystemGroup,
     clearFilters() {
       this.filters = {
         screens: {

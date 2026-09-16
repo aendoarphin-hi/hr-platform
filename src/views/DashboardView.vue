@@ -371,34 +371,9 @@ export default {
       return statSet;
     },
     activityDescription(a) {
-      const entity = a.entity_type;
-      let desc;
-
-      switch (entity) {
-        case 'playlist':
-          desc = this.playlists.find((e) => e.id === a.entity_id)?.name;
-          break;
-        case 'screen':
-          desc = this.screens.find((e) => e.id === a.entity_id)?.name;
-          break;
-        case 'content':
-          desc = this.content.find((e) => e.id === a.entity_id)?.title;
-          break;
-        case 'approval':
-          desc = this.approvals.find((e) => e.id === a.entity_id)?.title;
-          break;
-        case 'event':
-          desc = this.events.find((e) => e.id === a.entity_id)?.title;
-          break;
-        default:
-          break;
-      }
-      // if the action is 'delete' we'll need to get the captured json from that activity
-      // log and get the name of that deleted entity
-      if (a.action === "delete") {
-        desc = JSON.parse(a.entity_json).title;
-      }
-      return `${a.action}d ${entity}: ${desc}`;
+      // affected record is stored in the entity_json column in activity table
+      const desc = JSON.parse(a.entity_json).title;
+      return `${a.action}d ${a.entity_type}: ${desc}`;
     },
     recentEvents() {
       return this.events

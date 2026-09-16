@@ -21,6 +21,7 @@ import Television from "vue-material-design-icons/Television.vue";
 import CalendarMonth from "vue-material-design-icons/CalendarMonth.vue";
 import AccountClock from "vue-material-design-icons/AccountClock.vue";
 import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
+import { inSystemGroup } from "@/common/helpers";
 
 const publicPages = ["Auth", "Unauthorized"];
 
@@ -67,7 +68,7 @@ const routes = [
   },
   {
     path: "/configuration",
-    name: "Configuration",
+    name: "Screen Configuration",
     component: <ConfigureView />,
     active: false,
   },
@@ -105,6 +106,11 @@ router.beforeEach(async (to) => {
   try {
     const authRes = await axios.get(config.api + "?auth");
     store.authenticated = authRes.data;
+
+    // restrict configuration page if not in system group
+    if (to.name === "Screen Configuration" && !inSystemGroup()) {
+      return { name: "Unauthorized" };
+    }
   } catch (error) {
     store.authenticated = false;
     if (!publicPages.includes(to.name)) {

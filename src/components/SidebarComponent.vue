@@ -6,9 +6,9 @@
     </router-link>
     <span class="w-100 text-center text-muted" style="font-size: 10px;">v{{ $version }}</span>
     <hr />
-    <ul class="nav nav-pills flex-column mb-auto gap-1">
+    <ul class="nav nav-pills d-flex flex-column mb-auto gap-1">
       <li v-for="route in routes" :key="route.name" class="nav-item">
-        <router-link :to="{ name: route.name }" class="nav-link text-capitalize d-flex flex-row align-items-center"
+        <router-link :to="{ name: route.name }" class="nav-link text-capitalize hstack align-items-center"
           active-class="active">
           <span>
             <component :is="route.icon" />
@@ -16,7 +16,7 @@
         </router-link>
       </li>
       <li class="nav-item">
-        <a href="http://10.10.8.156" class="nav-link text-capitalize d-flex flex-row align-items-center">
+        <a href="http://10.10.8.156" class="nav-link text-capitalize hstack align-items-center">
           <span>
             <Logout />
           </span>&nbsp;&nbsp;<span>Exit</span>

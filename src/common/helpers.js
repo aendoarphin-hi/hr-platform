@@ -1,3 +1,5 @@
+import { store } from "./store";
+
 export function debounce() { // fix for resize observer error
   // Define debounce function
   const debounce = (fn, delay) => {
@@ -191,4 +193,8 @@ export function clearModalFocus(modalRef) {
       document.activeElement.blur();
     }
   });
+}
+
+export function inSystemGroup() {
+  return Object.values(store.authenticated.groups).includes("HR Comms System");
 }

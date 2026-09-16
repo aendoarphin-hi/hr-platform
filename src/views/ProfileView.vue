@@ -49,7 +49,6 @@
 </template>
 
 <script>
-import { user } from '@/common/static';
 import AccountCircle from 'vue-material-design-icons/AccountCircle.vue';
 
 export default {
@@ -64,7 +63,7 @@ export default {
   },
   async mounted() {
     try {
-      const res = await this.$axios.get(this.$api + 'employees?auth');
+      const res = await this.$axios.get(this.$api + '?auth');
 
       res.data.groups = Object.values(res.data.groups ?? {});
 
