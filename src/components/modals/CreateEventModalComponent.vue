@@ -15,7 +15,7 @@
           <div class="modal-body">
             <transition enter-active-class="animate__animated animate__fadeIn animate__faster">
               <!-- error message -->
-              <div v-if="error" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
+              <div v-if="error.length > 0" class="mb-2 p-2 small rounded bg-danger-subtle text-danger-emphasis">
                 {{ error }}
               </div>
             </transition>
@@ -270,24 +270,33 @@ export default {
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     },
     validateDates() {
-      this.allDay = false;
-      // user selected one day (via calendar or form input)
+      this.newEvent.allDay = false;
+
+      // user picked one day
       if (!this.newEvent.end && this.newEvent.start) {
         this.newEvent.end = "";
         this.newEvent.allDay = true;
       }
-      // start date is after end date
-      if (this.newEvent.start && this.newEvent.end && new Date(this.newEvent.start) > new Date(this.newEvent.end)) {
+      // user picked multiple days
+      if (!this.newEvent.start || !this.newEvent.end) {
+        this.error = "";
+        return;
+      }
+
+      const start = new Date(this.newEvent.start);
+      const end = new Date(this.newEvent.end);
+      // user picked start date after end date
+      if (start > end) {
         this.error = "Start date must be before end date.";
-      } else {
-        this.error = "";
+        return;
       }
-      // start is same as end
-      if ((this.newEvent.start && this.newEvent.end) && this.newEvent.start === this.newEvent.end) {
+      // user picked start date and end date on the same day
+      if (start.getTime() === end.getTime()) {
         this.error = "Start date and end date must be different.";
-      } else {
-        this.error = "";
+        return;
       }
+
+      this.error = "";
     }
   },
   watch: {

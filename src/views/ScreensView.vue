@@ -6,9 +6,11 @@
       <p>Use the tabs to navigate between <strong>Screens, Playlists, Content</strong>.</p>
       <h5>Screens</h5>
       <p>
-        Each available screen can be edited (<Pencil />) 
+        Each available screen can be edited (
+        <Pencil />)
         and assigned a playlist containing a sequence of images (content) to be presented.
-        Online or disabled devices can also be previewed (<OpenInNew />)
+        Online or disabled devices can also be previewed (
+        <OpenInNew />)
       </p>
       <h5>Screen Status</h5>
       <span :class="statusBadgeClass('online')" class="badge">Online</span><small> - Screen is fully operational and
@@ -19,7 +21,8 @@
         content will be shown and no actions can be applied.</small><br /><br />
       <h5>Playlists</h5>
       <p>
-        Playlists can be edited (<Pencil />) 
+        Playlists can be edited (
+        <Pencil />)
         and assigned to a screen. Playlists contain a set of ordered images (content) to be presented.
         Each playlist is created by a user with <span class="btn btn-sm btn-success small" style="font-size: 10px;">
           <PlaylistPlay /> New Playlist
@@ -27,7 +30,8 @@
       </p>
       <h5>Content</h5>
       <p>
-        Content can be edited (<Pencil />) 
+        Content can be edited (
+        <Pencil />)
         and added to a playlist. Content uploads will undergo approval before they can be added to a
         playlist.
         Upload new content with <span class="btn btn-sm btn-primary small" style="font-size: 10px;">
@@ -61,10 +65,11 @@
         <button class="btn btn-sm btn-primary" @click="openUploadModal">
           <UploadBox /> Upload Content
         </button>
-        <button v-if="inSystemGroup" class="btn btn-sm btn-secondary" @click="openConfigureModal">
+        <RouterLink to="configuration">
+        <button v-if="inSystemGroup" class="btn btn-sm btn-secondary">
           <Cog /> Configure Screens
         </button>
-
+        </RouterLink>
       </div>
     </div>
     <!-- main content -->

@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { markRaw, nextTick } from "vue";
 import { config } from "@/common/config.js";
+import { store } from "@/common/store.js";
+import axios from "axios";
 
 // views
 import DashboardView from "@/views/DashboardView.vue";
@@ -11,6 +13,7 @@ import ProfileView from "@/views/ProfileView.vue";
 import AuthView from "@/views/AuthView.vue";
 import UnauthorizedView from "@/views/UnauthorizedView.vue";
 import TestView from "@/views/TestView.vue";
+import ConfigureView from "@/views/ConfigureView.vue";
 
 // icons
 import ViewDashboard from "vue-material-design-icons/ViewDashboard.vue";
@@ -18,8 +21,6 @@ import Television from "vue-material-design-icons/Television.vue";
 import CalendarMonth from "vue-material-design-icons/CalendarMonth.vue";
 import AccountClock from "vue-material-design-icons/AccountClock.vue";
 import AccountCircle from "vue-material-design-icons/AccountCircle.vue";
-import axios from "axios";
-import { store } from "@/common/store.js";
 
 const publicPages = ["Auth", "Unauthorized"];
 
@@ -65,6 +66,12 @@ const routes = [
     icon: markRaw(AccountCircle),
   },
   {
+    path: "/configuration",
+    name: "Configuration",
+    component: <ConfigureView />,
+    active: false,
+  },
+  {
     path: "/auth",
     name: "Auth",
     component: <AuthView />,
@@ -96,7 +103,7 @@ const router = createRouter({
 // do stuff before route change
 router.beforeEach(async (to) => {
   try {
-    const authRes = await axios.get(config.api + "employees?auth");
+    const authRes = await axios.get(config.api + "?auth");
     store.authenticated = authRes.data;
   } catch (error) {
     store.authenticated = false;
