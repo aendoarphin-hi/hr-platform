@@ -23,8 +23,7 @@
             </transition>
 
             <!-- file upload -->
-            <BFormFile accept=".jpg,.jpeg,.png,.pdf" class="form small mb-2" id="upload-content-file" multiple
-              v-model="files" />
+            <!-- TODO: add a drag and drop area to upload files -->
             <div class="d-flex flex-wrap mb-2 gap-1">
               <span v-for="s in submittedFiles" :key="s" class="badge rounded-pill bg-primary-subtle text-primary-emphasis me-1">{{ s }}</span>
             </div>
@@ -47,11 +46,9 @@
 
 <script>
 import { clearModalFocus } from '@/common/helpers';
-import { BFormFile } from 'bootstrap-vue-next';
 
 export default {
   components: {
-    BFormFile
   },
   mounted() {
     clearModalFocus(this.$refs.uploadContentModal);

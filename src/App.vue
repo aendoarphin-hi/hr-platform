@@ -1,27 +1,25 @@
 <template>
   <!-- wrapper for bootstrap-vue components-->
-  <BApp>
-    <!-- dev tools -->
-    <div @click="border = !border" id="border-button" class="btn-sm btn-outline-primary cursor-pointer"
-      style="z-index: 1000; position: fixed; bottom: 0; right: 200px; opacity: 0.5">
-      {{ border ? "Disable" : "Enable" }} Borders
-    </div>
-    <div v-if="this.$env === 'development'"
-      style="z-index: 1000; position: fixed; bottom: 0; right: 0; background-color: yellow; opacity: 0.5">
-      Development Environment
-    </div>
-    <!-- main content -->
-    <div class="d-flex flex-row bg-light" style="height: 100vh; overflow: auto;" :class="border ? 'borderized' : ''">
-      <SidebarComponent />
-      <router-view id="router-view" class="container" v-slot="{ Component }">
-        <transition enter-active-class="animate__animated animate__fadeIn animate__faster"
-          leave-active-class="animate__animated animate__fadeOut animate__faster" mode="out-in">
-          <component :is="Component" :key="$route.path" />
-        </transition>
-      </router-view>
-    </div>
-    <ToastComponent ref="toast" />
-  </BApp>
+  <!-- dev tools -->
+  <div @click="border = !border" id="border-button" class="btn-sm btn-outline-primary cursor-pointer"
+    style="z-index: 1000; position: fixed; bottom: 0; right: 200px; opacity: 0.5">
+    {{ border ? "Disable" : "Enable" }} Borders
+  </div>
+  <div v-if="this.$env === 'development'"
+    style="z-index: 1000; position: fixed; bottom: 0; right: 0; background-color: yellow; opacity: 0.5">
+    Development Environment
+  </div>
+  <!-- main content -->
+  <div class="d-flex flex-row bg-light" style="height: 100vh; overflow: auto;" :class="border ? 'borderized' : ''">
+    <SidebarComponent />
+    <router-view id="router-view" class="container" v-slot="{ Component }">
+      <transition enter-active-class="animate__animated animate__fadeIn animate__faster"
+        leave-active-class="animate__animated animate__fadeOut animate__faster" mode="out-in">
+        <component :is="Component" :key="$route.path" />
+      </transition>
+    </router-view>
+  </div>
+  <ToastComponent ref="toast" />
 </template>
 
 <script>
@@ -29,14 +27,12 @@ import SidebarComponent from "@/components/SidebarComponent.vue";
 import AuthView from "@/views/AuthView.vue";
 import ToastComponent from "@/components/ToastComponent.vue";
 import { store } from "@/common/store";
-import { BApp } from "bootstrap-vue-next";
 
 export default {
   components: {
     SidebarComponent,
     AuthView,
     ToastComponent,
-    BApp
   },
   provide() {
     return {

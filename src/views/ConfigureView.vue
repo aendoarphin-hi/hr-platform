@@ -3,7 +3,8 @@
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Screen Configuration</h5>
-      <p>Use this page to manage screens on the system level.</p>
+      <p>Use this page to manage screens on the system level.
+        Select an available device to add to the screens list.</p>
     </HelpModalComponent>
 
     <!--  header + toolbar  -->
@@ -24,67 +25,108 @@
         <button :disabled="!selected" class="btn btn-sm btn-primary" @click="console.log('edit')">
           Edit
         </button>
-        <button :disabled="!selected" class="btn btn-sm btn-secondary" @click="console.log('delete')">
+        <button :disabled="!selected" class="btn btn-sm btn-danger" @click="console.log('delete')">
           Delete
         </button>
       </div>
     </div>
-    <div class="card overflow-hidden p-3">
-      <!-- main content -->
-      <div class="small d-flex flex-column flex-lg-row gap-3">
-
-        <!-- fetched network devices -->
-        <div style="min-width: 300px;">
-          <!-- continue here with list of devices -->
+    <!-- main content -->
+    <div>
+      <!-- screens list -->
+      <div class="card p-3 mb-3">
+        <div class="hstack justify-content-between py-1">
+          <span class="fw-semibold text-uppercase">Screens</span>
+          <small class="text-muted">List of configured screens</small>
         </div>
-
-        <!-- active screens -->
-        <div>
-          <h5>Active Screens</h5>
-
-          <div style="max-height: 70vh; overflow-y: auto;">
-            <table class="table table-bordered table-hover align-middle mb-0">
-              <thead>
-                <tr class="text-nowrap">
-                  <th scope="col" class="sticky-top bg-body">ID</th>
-                  <th scope="col" class="sticky-top bg-body">TITLE</th>
-                  <th scope="col" class="sticky-top bg-body">LOCATION ID</th>
-                  <th scope="col" class="sticky-top bg-body">STATUS</th>
-                  <th scope="col" class="sticky-top bg-body">CONTENT</th>
-                  <th scope="col" class="sticky-top bg-body">PLAYLIST ID</th>
-                  <th scope="col" class="sticky-top bg-body">MAC ADDRESS</th>
-                  <th scope="col" class="sticky-top bg-body">IP ADDRESS</th>
-                  <th scope="col" class="sticky-top bg-body">LAST SEEN AT</th>
-                  <th scope="col" class="sticky-top bg-body">CREATED AT</th>
-                  <th scope="col" class="sticky-top bg-body">UPDATED AT</th>
+        <div style="height:40dvh;" class="border table-responsive bg-body-light small">
+          <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-light sticky-top shadow-sm" style="top: 0; z-index: 1;">
+              <tr>
+                <th v-for="(col, i) in [
+                  'ID',
+                  'Title',
+                  'Location',
+                  'Status',
+                  'Content',
+                  'Playlist',
+                  'MAC',
+                  'IP',
+                  'Last Seen',
+                  'Created',
+                  'Updated',
+                ]" v-bind:key="i">
+                  {{ col }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-if="screens.length > 0">
+                <tr v-for="(screen, i) in screens" v-bind:key="i">
+                  <td>{{ screen.id }}</td>
+                  <td>{{ screen.title }}</td>
+                  <td>{{ screen.location_id }}</td>
+                  <td>{{ screen.status }}</td>
+                  <td>{{ screen.content }}</td>
+                  <td>{{ screen.playlist_id }}</td>
+                  <td>{{ screen.mac_address }}</td>
+                  <td>{{ screen.ip_address }}</td>
+                  <td>{{ screen.last_seen_at }}</td>
+                  <td>{{ screen.created_at }}</td>
+                  <td>{{ screen.updated_at }}</td>
                 </tr>
-              </thead>
-
-              <tbody v-if="!initializing" class="table-group-divider">
-                <tr v-show="screens.length > 0" v-for="s in screens" :key="s.id">
-                  <td v-for="(value, i) in s" :key="i">
-                    {{ value }}
-                  </td>
-                </tr>
-
-                <tr v-show="screens.length === 0">
-                  <td colspan="11">
-                    No active screens. Add from available devices.
-                  </td>
-                </tr>
-              </tbody>
-
-              <tbody v-else class="table-group-divider">
+              </template>
+              <template v-else>
                 <tr>
-                  <td colspan="11">
-                    <span class="animate-flash-infinite">Loading screens...</span>
+                  <td colspan="11" class="text-center">No screens. Add one from available devices.</td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- available devices list -->
+      <div class="card p-3">
+        <div class="hstack justify-content-between py-1">
+          <span class="fw-semibold text-uppercase">Available Devices</span>
+          <button :disabled="scanning" :class="{ 'animate-flash-infinite': scanning }" 
+          v-if="availableDevices.length > 0" class="btn btn-sm btn-primary"
+          @click="scanDevices" style="font-size: 6pt;">
+            {{ scanning ? 'Scanning...' : 'Scan Network' }}
+          </button>
+        </div>
+        <div style="height:40dvh;" class="border table-responsive bg-body-light small">
+          <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-light sticky-top shadow-sm" style="top: 0; z-index: 1;">
+              <tr>
+                <th :hidden="availableDevices.length === 0" v-for="(col, i) in [
+                  'IP',
+                  'MAC',
+                ]" v-bind:key="i">
+                  {{ col }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-if="availableDevices.length > 0">
+                <tr v-for="(d, i) in availableDevices" v-bind:key="i">
+                  <td>{{ d.ip }}</td>
+                  <td>{{ d.mac }}</td>
+                </tr>
+              </template>
+              <template v-else>
+                <tr>
+                  <td colspan="2" class="text-center p-3">
+                    Scan the network for available devices.<br/>
+                    <button @click="scanDevices" class="mt-3 btn btn-sm btn-primary"
+                    :class="{ 'animate-flash-infinite': scanning }" :disabled="scanning">
+                      {{  scanning ? 'Scanning...' : 'Scan Network' }}
+                    </button>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
+              </template>
+            </tbody>
+          </table>
         </div>
-
       </div>
     </div>
   </div>
@@ -100,6 +142,7 @@ export default {
   data() {
     return {
       initializing: false,
+      scanning: false,
       availableDevices: [],
       screens: [],
       selected: null
@@ -108,10 +151,6 @@ export default {
   async mounted() {
     try {
       this.initializing = true;
-      // fetch all available devices in the network
-      await this.$axios.get(this.$api + 'screens?networkdevices').then(res => {
-        this.availableDevices = res.data;
-      });
       await this.$axios.get(this.$api + 'screens?all').then(res => {
         this.screens = res.data;
       })
@@ -121,6 +160,14 @@ export default {
     }
   },
   methods: {
+    async scanDevices() {
+      this.scanning = true;
+      // fetch all available devices in the network
+      await this.$axios.get(this.$api + 'screens?networkdevices').then(res => {
+        this.availableDevices = res.data;
+      })
+      this.scanning = false;
+    },
     selectDevice(device) {
       this.selected = device;
     },
