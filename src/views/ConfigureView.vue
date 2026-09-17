@@ -1,5 +1,5 @@
 <template>
-  <div :id="`${$route.name}-view`" class="w-100 p-3" @click.="handleOffClick">
+  <div :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Screen Configuration</h5>
@@ -8,7 +8,7 @@
     </HelpModalComponent>
 
     <!--  header + toolbar  -->
-    <div class="hstack align-items-center flex-wrap position-sticky mb-3">
+    <div class="hstack align-items-center flex-wrap mb-4">
       <!-- header -->
       <div class="fs-5 fw-semibold text-capitalize d-flex align-items-center gap-2">
         <span>{{ $route.name }}</span>
@@ -18,134 +18,82 @@
       </div>
       <!-- toolbar -->
       <div class="hstack ms-auto fw-semibold gap-2 text-nowrap flex-wrap">
-        <!-- add any toolbar buttons here if needed in the future -->
-        <button :disabled="!selected" class="btn btn-sm btn-success">
-          + Add
-        </button>
-        <button :disabled="!selected" class="btn btn-sm btn-primary" @click="console.log('edit')">
-          Edit
-        </button>
-        <button :disabled="!selected" class="btn btn-sm btn-danger" @click="console.log('delete')">
-          Delete
+        <button :disabled="scanning" class="btn btn-sm btn-primary" @click="scanDevices">
+          <span :class="{ 'animate-flash-infinite': scanning }">{{ scanning ? 'Scanning...' : 'Scan Network' }}</span>
         </button>
       </div>
     </div>
+
     <!-- main content -->
-    <div>
-      <!-- screens list -->
-      <div class="card p-3 mb-3">
-        <div class="hstack justify-content-between py-1">
-          <span class="fw-semibold text-uppercase">Screens</span>
-          <small class="text-muted">List of configured screens</small>
-        </div>
-        <div style="height:40dvh;" class="border table-responsive bg-body-light small">
-          <table class="table table-striped table-hover align-middle mb-0">
-            <thead class="table-light sticky-top shadow-sm" style="top: 0; z-index: 1;">
-              <tr>
-                <th v-for="(col, i) in [
-                  'ID',
-                  'Title',
-                  'Location',
-                  'Status',
-                  'Content',
-                  'Playlist',
-                  'MAC',
-                  'IP',
-                  'Last Seen',
-                  'Created',
-                  'Updated',
-                ]" v-bind:key="i">
-                  {{ col }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="screens.length > 0">
-                <tr v-for="(screen, i) in screens" v-bind:key="i">
-                  <td>{{ screen.id }}</td>
-                  <td>{{ screen.title }}</td>
-                  <td>{{ screen.location_id }}</td>
-                  <td>{{ screen.status }}</td>
-                  <td>{{ screen.content }}</td>
-                  <td>{{ screen.playlist_id }}</td>
-                  <td>{{ screen.mac_address }}</td>
-                  <td>{{ screen.ip_address }}</td>
-                  <td>{{ screen.last_seen_at }}</td>
-                  <td>{{ screen.created_at }}</td>
-                  <td>{{ screen.updated_at }}</td>
-                </tr>
-              </template>
-              <template v-else>
-                <tr>
-                  <td colspan="11" class="text-center">No screens. Add one from available devices.</td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <!-- available devices list -->
-      <div class="card p-3">
-        <div class="hstack justify-content-between py-1">
-          <span class="fw-semibold text-uppercase">Available Devices</span>
-          <button :disabled="scanning" :class="{ 'animate-flash-infinite': scanning }" 
-          v-if="availableDevices.length > 0" class="btn btn-sm btn-primary"
-          @click="scanDevices" style="font-size: 6pt;">
-            {{ scanning ? 'Scanning...' : 'Scan Network' }}
-          </button>
-        </div>
-        <div style="height:40dvh;" class="border table-responsive bg-body-light small">
-          <table class="table table-striped table-hover align-middle mb-0">
-            <thead class="table-light sticky-top shadow-sm" style="top: 0; z-index: 1;">
-              <tr>
-                <th :hidden="availableDevices.length === 0" v-for="(col, i) in [
-                  'IP',
-                  'MAC',
-                ]" v-bind:key="i">
-                  {{ col }}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <template v-if="availableDevices.length > 0">
-                <tr v-for="(d, i) in availableDevices" v-bind:key="i">
-                  <td>{{ d.ip }}</td>
-                  <td>{{ d.mac }}</td>
-                </tr>
-              </template>
-              <template v-else>
-                <tr>
-                  <td colspan="2" class="text-center p-3">
-                    Scan the network for available devices.<br/>
-                    <button @click="scanDevices" class="mt-3 btn btn-sm btn-primary"
-                    :class="{ 'animate-flash-infinite': scanning }" :disabled="scanning">
-                      {{  scanning ? 'Scanning...' : 'Scan Network' }}
-                    </button>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="d-flex flex-column flex-md-row gap-3 w-100">
+
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light rounded-top sticky-top shadow-sm" style="top: 0; z-index: 1;">
+          <tr>
+            <th :hidden="availableDevices.length === 0" v-for="(col, i) in [
+              'IP',
+              'MAC',
+            ]" v-bind:key="i">
+              {{ col }}
+            </th>
+            <th class="text-end" scope="col">&nbsp;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-if="availableDevices.length > 0">
+            <tr v-for="(d, i) in sortedDevices" v-bind:key="i" @mouseover="hoverIndex = i"
+              @mouseleave="hoverIndex = -1">
+              <td>{{ d.ip }}</td>
+              <td>{{ d.mac }}</td>
+              <td class="text-end">
+                <div :class="{ invisible: hoverIndex !== i }">
+                  <button class="btn btn-sm btn-success cursor-pointer" @click="openAddScreenModal(d)">
+                    + Add
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </template>
+          <template v-else>
+            <tr style="height: 280px;">
+              <td colspan="2" class="text-center p-3">
+                Scan the network for available devices.
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+
     </div>
+
+    <AddDeviceModal ref="addDeviceModal" :device="selected" />
+    <EditScreenRecordModal ref="editScreenRecordModal" :screen="selectedScreen" @saved="onScreenSaved" />
   </div>
 </template>
 
 <script>
+import AddDeviceModal from '@/components/modals/AddDeviceModal.vue';
+import EditScreenRecordModal from '@/components/modals/EditScreenRecordModalComponent.vue';
+import { Modal } from 'bootstrap';
+import { nextTick } from 'vue';
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 
 export default {
   components: {
     HelpCircleOutline,
+    AddDeviceModal,
+    EditScreenRecordModal
   },
   data() {
     return {
       initializing: false,
       scanning: false,
+      hoverIndex: -1,
+      screenHoverIndex: -1,
       availableDevices: [],
       screens: [],
-      selected: null
+      selected: null,
+      selectedScreen: null,
     }
   },
   async mounted() {
@@ -159,8 +107,38 @@ export default {
       console.log(error);
     }
   },
+  computed: {
+    sortedDevices() {
+      return [...this.availableDevices].sort((a, b) => {
+        const aParts = a.ip.split(".").map(Number);
+        const bParts = b.ip.split(".").map(Number);
+
+        for (let i = 0; i < 4; i++) {
+          if (aParts[i] !== bParts[i]) {
+            return aParts[i] - bParts[i];
+          }
+        }
+
+        return 0;
+      }).reverse();
+    }
+  },
   methods: {
+    openEditScreenRecordModal(screen) {
+      nextTick(() => {
+        // pass a clone so edits in the modal don't leak into the table until saved
+        this.selectedScreen = { ...screen };
+        Modal.getOrCreateInstance(document.getElementById('edit-screen-record-modal')).show();
+      })
+    },
+    onScreenSaved(updated) {
+      const i = this.screens.findIndex((s) => s.id === updated.id);
+      if (i !== -1) {
+        this.screens.splice(i, 1, { ...this.screens[i], ...updated });
+      }
+    },
     async scanDevices() {
+      this.availableDevices = [];
       this.scanning = true;
       // fetch all available devices in the network
       await this.$axios.get(this.$api + 'screens?networkdevices').then(res => {
@@ -168,12 +146,12 @@ export default {
       })
       this.scanning = false;
     },
-    selectDevice(device) {
-      this.selected = device;
+    openAddScreenModal(device) {
+      nextTick(() => {
+        this.selected = device;
+        Modal.getOrCreateInstance(document.getElementById('add-device-modal')).show();
+      })
     },
-    handleOffClick() {
-      this.selected = null;
-    }
   }
 }
 </script>

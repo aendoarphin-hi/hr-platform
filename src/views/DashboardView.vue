@@ -87,8 +87,8 @@
               &nbsp;▸</router-link>
           </div>
           <ul v-if="upcomingAnnouncements.length" class="list-group list-group-flush">
-            <li v-for="(a, i) in upcomingAnnouncements" :key="i" class="list-group-item d-flex align-items-center gap-3"
-              :class="i === 0 ? 'fs-5 fw-semibold border-4' : 'small'">
+            <li v-for="(a, i) in upcomingAnnouncements" :key="i" class="list-group-item small d-flex align-items-center gap-3"
+              :class="i === 0 ? 'border-4' : ''">
               <div class="flex-grow-1 min-w-0">
                 <div class="fw-semibold text-truncate text-uppercase">{{ a.title }}</div>
                 <div class="text-muted small">
@@ -96,7 +96,7 @@
                     <MapMarker /> {{ a.location }}
                   </span>
                   <span v-if="a.start">
-                    <Calendar /> {{ new Date(a.start).toDateString() }}
+                    <Calendar /> {{ new Date(a.start).toDateString() === new Date().toDateString() ? 'Today' : new Date(a.start).toDateString() }}
                   </span>
                 </div>
               </div>

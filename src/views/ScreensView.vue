@@ -155,7 +155,7 @@
           <!-- list view -->
           <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="screens.length > 0" class="table table-hover align-middle mb-0">
-              <thead class="table-light sticky-top shadow-sm text-nowrap">
+              <thead class="table-light sticky-top shadow-sm text-nowrap small">
                 <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.screens" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
@@ -173,14 +173,14 @@
                 <tr v-for="(s, i) in screens" :key="s.id" @mouseover="hoverIndex = i" @mouseleave="hoverIndex = -1">
                   <td class="fw-semibold"
                     style="max-width: 500px; overflow: hidden; text-overflow: ellipsis; text-wrap: nowrap">
-                    {{ s.name }}
+                    {{ s.title }}
                   </td>
-                  <td>{{ d.location }}</td>
+                  <td>{{ s.location }}</td>
                   <td>
-                    <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
+                    <span class="badge text-capitalize" :class="statusBadgeClass(s.status)">{{ s.status }}</span>
                   </td>
                   <td>
-                    <span>{{ getPlaylistName(d.playlist_id) }}</span>
+                    <span>{{ getPlaylistName(s.playlist_id) }}</span>
                   </td>
                   <td class="text-end">
                     <div class="d-flex gap-2 justify-content-end" :class="{ invisible: hoverIndex !== i }">
@@ -207,16 +207,16 @@
               class="card card-font-sm shadow-sm border col-12 col-md-5 col-lg-3 col-xl-2">
               <div class="card-body d-flex flex-column gap-2">
                 <div class="fw-semibold" style="max-width: 500px; overflow: hidden; text-overflow: ellipsis">
-                  <Television /> {{ s.name }}
+                  <Television /> {{ s.title }}
                 </div>
                 <span>
-                  <span class="badge text-capitalize" :class="statusBadgeClass(d.status)">{{ d.status }}</span>
+                  <span class="badge text-capitalize" :class="statusBadgeClass(s.status)">{{ s.status }}</span>
                 </span>
                 <span v-if="s.playlist_id" class="text-muted">
-                  <PlaylistPlay /> {{ getPlaylistName(d.playlist_id) }}
+                  <PlaylistPlay /> {{ getPlaylistName(s.playlist_id) }}
                 </span>
                 <span v-if="s.location" class="text-muted">
-                  <MapMarker /> {{ d.location }}
+                  <MapMarker /> {{ s.location }}
                 </span>
               </div>
             </div>
@@ -273,7 +273,7 @@
           <!-- list view -->
           <div v-if="viewMode === 'list'" class="table-responsive border-top border-bottom">
             <table v-if="playlists.length > 0" class="table table-hover align-middle mb-0">
-              <thead class="table-light sticky-top shadow-sm text-nowrap">
+              <thead class="table-light sticky-top shadow-sm text-nowrap small">
                 <tr class="text-uppercase">
                   <th v-for="(sc, i) in sortableColumns.playlists" class="cursor-pointer" v-bind:key="i"
                     @click="sortList(sc)">
@@ -599,9 +599,9 @@ export default {
       const locationNameById = Object.fromEntries(
         this.locations.map((l) => [l.id, l.name])
       );
-      let result = this.rawScreens.map((d) => ({
-        ...d,
-        location: locationNameById[d.location_id] ?? "",
+      let result = this.rawScreens.map((s) => ({
+        ...s,
+        location: locationNameById[s.location_id] ?? "",
       }));
       result = filterByField(result, "location", this.filters.screens.location);
       result = filterByField(result, "status", this.filters.screens.status);
