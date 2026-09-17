@@ -1,4 +1,4 @@
-# hr-platform
+# screens
 
 ## Project setup
 ```
