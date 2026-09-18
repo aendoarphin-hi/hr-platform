@@ -36,20 +36,22 @@
               <option value="disabled">Disabled</option>
             </select>
             <div class="hstack gap-2">
-              <input disabled type="text" class="form-control form-control-sm" :value="device?.ip ?? 'IP not found'"
+              <input disabled type="text" class="form-control form-control-sm" :value="screen.ip_address"
                 style="width: 50%">
-              <input disabled type="text" class="form-control form-control-sm" :value="device?.mac ?? 'MAC not found'"
+              <input disabled type="text" class="form-control form-control-sm" :value="screen.mac_address"
                 style="width: 50%">
             </div>
           </div>
         </div>
 
         <div class="modal-footer p-2">
-          <button type="button" class="btn btn-sm btn-danger me-2" data-bs-dismiss="modal" title="Cancel">
+          <button @click="clearChanges" type="button" class="btn btn-sm btn-danger me-2" data-bs-dismiss="modal"
+            title="Cancel">
             Cancel
           </button>
 
-          <button :disabled="canSubmit" @click="submit" type="button" class="btn btn-sm btn-success" title="Add Screen">
+          <button :disabled="isSubmitDisabled" @click="submit" type="button" class="btn btn-sm btn-success"
+            title="Add Screen">
             + Add
           </button>
         </div>
@@ -64,9 +66,7 @@ import { clearModalFocus } from '@/common/helpers';
 import { Modal } from 'bootstrap';
 
 export default {
-  props: {
-    device: Object
-  },
+  inject: ['toast'],
   data() {
     return {
       locations: [],
@@ -81,30 +81,43 @@ export default {
     }
   },
   methods: {
+    setDevice(device) {
+      this.clearChanges();
+
+      this.screen.mac_address = device?.mac ?? null;
+      this.screen.ip_address = device?.ip ?? null;
+    },
     async submit() {
       try {
         this.error = '';
-        if (!window.confirm('Are you sure you want to add this screen?\n\n' + JSON.stringify(this.screen, null, 2))) return;
+        // if (!window.confirm('Are you sure you want to add this screen?\n\n' + JSON.stringify(this.screen, null, 2))) return;
         const res = await this.$axios.post(this.$api + 'screens?new', this.screen);
         // warn that screen already exists
         if (res.data.success === false && res.data.code === 200) {
           this.error = res.data.message
         } else {
           Modal.getOrCreateInstance(document.getElementById('add-device-modal')).hide();
-          this.screen = {
-            title: null, // continue here with screen creation
-            location_id: null,
-            status: null
-          }
+          this.toast.show("Screen Added", "The screen has been added.", "bg-success-subtle text-success-emphasis");
+          this.clearChanges();
         }
       } catch (e) {
         this.error = e
         console.error(e);
       }
+    },
+    clearChanges() {
+      this.screen = {
+        title: null,
+        location_id: null,
+        status: null,
+        mac_address: null,
+        ip_address: null
+      }
+      this.error = '';
     }
   },
   computed: {
-    canSubmit() {
+    isSubmitDisabled() {
       return !this.screen.title ||
         !this.screen.location_id ||
         !this.screen.status ||
@@ -116,17 +129,5 @@ export default {
     clearModalFocus(this.$refs.addDeviceModal);
     this.locations = (await this.$axios.get(this.$api + 'locations?all')).data
   },
-  watch: {
-    device() {
-      // clear form
-      this.screen = {
-        title: null,
-        location_id: null,
-        status: null
-      }
-      this.screen.mac_address = this.device.mac;
-      this.screen.ip_address = this.device.ip;
-    }
-  }
 }
 </script>
