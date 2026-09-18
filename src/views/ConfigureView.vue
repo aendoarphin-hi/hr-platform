@@ -4,7 +4,7 @@
     <HelpModalComponent>
       <h5>Screen Configuration</h5>
       <p>Scan the network for available screens. You can then add them to the list of screens.
-         Once the screen is added, it will be available for users to manage in the <b>Screens</b> tab.
+        Once the screen is added, it will be available for users to manage in the <b>Screens</b> tab.
       </p>
     </HelpModalComponent>
 
@@ -46,12 +46,18 @@
               <tr v-for="(d, i) in sortedDevices" v-bind:key="i" @mouseover="hoverIndex = i"
                 @mouseleave="hoverIndex = -1">
                 <td>{{ d.ip }}</td>
-                <td>{{ d.mac }} <span
-                    class="text-uppercase bg-success-subtle text-success-emphasis rounded-pill badge badge-sm">{{
-                      screenExists(d.mac) ? 'Already Added' : '' }}</span></td>
+                <td>
+                  <div class="d-flex flex-row align-item">
+                    <span>{{ d.mac }}</span>
+                    <span
+                      class="text-uppercase bg-success-subtle text-success-emphasis rounded-pill badge badge-sm ms-2">
+                      <small v-if="screenExists(d.mac)">Added</small>
+                    </span>
+                  </div>
+                </td>
                 <td class="text-end">
                   <div :class="{ invisible: hoverIndex !== i }">
-                    <button class="btn btn-sm btn-success cursor-pointer" @click="openAddScreenModal(d)">
+                    <button v-if="!screenExists(d.mac)" class="btn btn-sm btn-success cursor-pointer" @click="openAddScreenModal(d)">
                       + Add
                     </button>
                   </div>
@@ -71,14 +77,12 @@
 
     </div>
 
-    <AddDeviceModal ref="addDeviceModal" />
-    <EditScreenRecordModal ref="editScreenRecordModal" :screen="selectedScreen" @saved="onScreenSaved" />
+    <AddDeviceModalComponent @added="scanDevices" ref="addDeviceModal" />
   </div>
 </template>
 
 <script>
-import AddDeviceModal from '@/components/modals/AddDeviceModal.vue';
-import EditScreenRecordModal from '@/components/modals/EditScreenRecordModalComponent.vue';
+import AddDeviceModalComponent from '@/components/modals/AddDeviceModalComponent.vue';
 import { Modal } from 'bootstrap';
 import { nextTick } from 'vue';
 import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
@@ -86,18 +90,15 @@ import HelpCircleOutline from 'vue-material-design-icons/HelpCircleOutline.vue'
 export default {
   components: {
     HelpCircleOutline,
-    AddDeviceModal,
-    EditScreenRecordModal
+    AddDeviceModalComponent,
   },
   data() {
     return {
       initializing: false,
       scanning: false,
       hoverIndex: -1,
-      screenHoverIndex: -1,
       availableDevices: [],
       screens: [],
-      selectedScreen: null,
     }
   },
   async mounted() {
@@ -128,31 +129,26 @@ export default {
     }
   },
   methods: {
-    async screenExists(mac) {
-      const screens = (await this.$axios.get(this.$api + 'screens?all')).data;
-      return screens.some((s) => s.mac_address === mac);
-    },
-    openEditScreenRecordModal(screen) {
-      nextTick(() => {
-        // pass a clone so edits in the modal don't leak into the table until saved
-        this.selectedScreen = { ...screen };
-        Modal.getOrCreateInstance(document.getElementById('edit-screen-record-modal')).show();
-      })
-    },
-    onScreenSaved(updated) {
-      const i = this.screens.findIndex((s) => s.id === updated.id);
-      if (i !== -1) {
-        this.screens.splice(i, 1, { ...this.screens[i], ...updated });
-      }
+    screenExists(mac) {
+      return this.screens.some(s => s.mac_address === mac);
     },
     async scanDevices() {
       this.availableDevices = [];
       this.scanning = true;
-      // fetch all available devices in the network
-      await this.$axios.get(this.$api + 'screens?networkdevices').then(res => {
-        this.availableDevices = res.data;
-      })
-      this.scanning = false;
+
+      try {
+        const [devicesRes, screensRes] = await Promise.all([
+          this.$axios.get(this.$api + 'screens?networkdevices'),
+          this.$axios.get(this.$api + 'screens?all')
+        ]);
+
+        this.availableDevices = devicesRes.data;
+        this.screens = screensRes.data;
+      } catch (error) {
+        console.error(error);
+      } finally {
+        this.scanning = false;
+      }
     },
     openAddScreenModal(device) {
       nextTick(() => {

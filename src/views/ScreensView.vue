@@ -1,13 +1,12 @@
 <template>
-  <div v-if="!initializing" :id="`${$route.name}-view`" class="w-100 p-3">
+  <div :id="`${$route.name}-view`" class="w-100 p-3">
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Navigation</h5>
       <p>Use the tabs to navigate between <strong>Screens, Playlists, Content</strong>.</p>
       <h5>Screens</h5>
       <p>
-        Each available screen can be edited (
-        <Pencil />)
+        Each available screen can be edited with <span class="btn btn-sm btn-primary small mx-2" style="font-size: 10px;">Edit</span>
         and assigned a playlist containing a sequence of images (content) to be presented.
         Online or disabled devices can also be previewed (
         <OpenInNew />)
@@ -199,7 +198,7 @@
               <span class="text-muted">No screens found.</span>
             </div>
           </div>
-          <!-- grid view -->
+          <!-- grid view CONTINUE HERE WITH LOADING RENDER -->
           <div v-else-if="!initializing && viewMode === 'grid'"
             class="d-flex flex-row justify-content-start gap-2 flex-wrap overflow-hidden overflow-y-auto border-bottom border-top py-3"
             style="max-height: 70dvh">
@@ -488,9 +487,7 @@
       </div>
     </div>
     <UploadContentModalComponent ref="upload-content-modal" />
-  </div>
-  <div v-else>
-    <LoadingComponent message="Loading screens..." />
+    <EditScreenModalComponent @updated="refreshTabPane(activeTab)" @deleted="refreshTabPane(activeTab)" :screen="screenToEdit" ref="edit-screen-modal" />
   </div>
 </template>
 
@@ -521,6 +518,7 @@ import { filterByField, inSystemGroup, searchByText, sortByField } from "@/commo
 import { Modal } from "bootstrap";
 import UploadContentModalComponent from "@/components/modals/UploadContentModalComponent.vue";
 import { nextTick } from "vue";
+import EditScreenModalComponent from "@/components/modals/EditScreenModalComponent.vue";
 
 export default {
   name: "ScreenView",
@@ -548,6 +546,7 @@ export default {
     Cog,
 
     UploadContentModalComponent,
+    EditScreenModalComponent,
   },
   inject: ["store"],
   data() {
@@ -588,6 +587,7 @@ export default {
       hoverIndex: -1, // for hover effect on tab actions
       viewMode: "grid", // grid or list
       activeTab: "screens", // active tab
+      screenToEdit: null, // obj to pass to modal for editing
     };
   },
   computed: {
@@ -632,7 +632,11 @@ export default {
   },
   methods: {
     openEditScreenModal(s) {
-      window.alert(JSON.stringify(s, null, 2));
+      // window.alert(JSON.stringify(s, null, 2));
+      this.screenToEdit = { ...s };
+      nextTick(() => {
+        Modal.getOrCreateInstance(document.getElementById("edit-screen-modal")).show();
+      })
     },
     openUploadModal() {
       nextTick(() => {
@@ -715,7 +719,7 @@ export default {
       } catch (error) {
         console.log(error + " at " + this.name);
       } finally {
-        this.initializing = false;
+        // this.initializing = false;
       }
     },
 

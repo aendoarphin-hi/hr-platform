@@ -67,6 +67,7 @@ import { Modal } from 'bootstrap';
 
 export default {
   inject: ['toast'],
+  emits: ['added'],
   data() {
     return {
       locations: [],
@@ -99,6 +100,7 @@ export default {
           Modal.getOrCreateInstance(document.getElementById('add-device-modal')).hide();
           this.toast.show("Screen Added", "The screen has been added.", "bg-success-subtle text-success-emphasis");
           this.clearChanges();
+          this.$emit('added');
         }
       } catch (e) {
         this.error = e
