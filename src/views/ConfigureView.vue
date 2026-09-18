@@ -3,8 +3,9 @@
     <!-- help modal -->
     <HelpModalComponent>
       <h5>Screen Configuration</h5>
-      <p>Use this page to manage screens on the system level.
-        Select an available device to add to the screens list.</p>
+      <p>Scan the network for available screens. You can then add them to the list of screens.
+         Once the screen is added, it will be available for users to manage in the <b>Screens</b> tab.
+      </p>
     </HelpModalComponent>
 
     <!--  header + toolbar  -->
@@ -25,48 +26,52 @@
     </div>
 
     <!-- main content -->
-    <div class="d-flex flex-column flex-md-row gap-3 w-100">
-
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light rounded-top sticky-top shadow-sm" style="top: 0; z-index: 1;">
-          <tr>
-            <th :hidden="availableDevices.length === 0" v-for="(col, i) in [
-              'IP',
-              'MAC',
-            ]" v-bind:key="i">
-              {{ col }}
-            </th>
-            <th class="text-end" scope="col">&nbsp;</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-if="availableDevices.length > 0">
-            <tr v-for="(d, i) in sortedDevices" v-bind:key="i" @mouseover="hoverIndex = i"
-              @mouseleave="hoverIndex = -1">
-              <td>{{ d.ip }}</td>
-              <td>{{ d.mac }}</td>
-              <td class="text-end">
-                <div :class="{ invisible: hoverIndex !== i }">
-                  <button class="btn btn-sm btn-success cursor-pointer" @click="openAddScreenModal(d)">
-                    + Add
-                  </button>
-                </div>
-              </td>
+    <div class="d-flex flex-column gap-3 w-100">
+      <h5>Available Devices ({{ availableDevices.length }})</h5>
+      <div class="rounded overflow-hidden border">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light sticky-top shadow-sm" style="top: 0; z-index: 1;">
+            <tr>
+              <th :hidden="availableDevices.length === 0" v-for="(col, i) in [
+                'IP',
+                'MAC',
+              ]" v-bind:key="i">
+                {{ col }}
+              </th>
+              <th class="text-end" scope="col">&nbsp;</th>
             </tr>
-          </template>
-          <template v-else>
-            <tr style="height: 280px;">
-              <td colspan="2" class="text-center p-3">
-                Scan the network for available devices.
-              </td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <template v-if="availableDevices.length > 0">
+              <tr v-for="(d, i) in sortedDevices" v-bind:key="i" @mouseover="hoverIndex = i"
+                @mouseleave="hoverIndex = -1">
+                <td>{{ d.ip }}</td>
+                <td>{{ d.mac }} <span
+                    class="text-uppercase bg-success-subtle text-success-emphasis rounded-pill badge badge-sm">{{
+                      screenExists(d.mac) ? 'Already Added' : '' }}</span></td>
+                <td class="text-end">
+                  <div :class="{ invisible: hoverIndex !== i }">
+                    <button class="btn btn-sm btn-success cursor-pointer" @click="openAddScreenModal(d)">
+                      + Add
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+            <template v-else>
+              <tr style="height: 280px;">
+                <td colspan="2" class="text-center p-3">
+                  Scan the network for available devices.
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
 
     </div>
 
-    <AddDeviceModal ref="addDeviceModal" :device="selected" />
+    <AddDeviceModal ref="addDeviceModal" />
     <EditScreenRecordModal ref="editScreenRecordModal" :screen="selectedScreen" @saved="onScreenSaved" />
   </div>
 </template>
@@ -92,7 +97,6 @@ export default {
       screenHoverIndex: -1,
       availableDevices: [],
       screens: [],
-      selected: null,
       selectedScreen: null,
     }
   },
@@ -124,6 +128,10 @@ export default {
     }
   },
   methods: {
+    async screenExists(mac) {
+      const screens = (await this.$axios.get(this.$api + 'screens?all')).data;
+      return screens.some((s) => s.mac_address === mac);
+    },
     openEditScreenRecordModal(screen) {
       nextTick(() => {
         // pass a clone so edits in the modal don't leak into the table until saved
@@ -148,9 +156,12 @@ export default {
     },
     openAddScreenModal(device) {
       nextTick(() => {
-        this.selected = device;
-        Modal.getOrCreateInstance(document.getElementById('add-device-modal')).show();
-      })
+        this.$refs.addDeviceModal.setDevice(device);
+
+        Modal.getOrCreateInstance(
+          document.getElementById('add-device-modal')
+        ).show();
+      });
     },
   }
 }
