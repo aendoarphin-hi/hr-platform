@@ -34,7 +34,7 @@
               Cancel
             </button>
 
-            <button type="submit" class="btn btn-sm btn-success" title="Upload Content"> <!-- continue here and finish the upload process -->
+            <button type="submit" class="btn btn-sm btn-success" title="Upload Content">
               + Upload
             </button>
           </div>
