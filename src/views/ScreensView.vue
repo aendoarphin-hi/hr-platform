@@ -218,6 +218,7 @@
                 <span v-if="s.location" class="text-muted">
                   <MapMarker /> {{ s.location }}
                 </span>
+                <span @click="openEditScreenModal(s)" class="cursor-pointer mt-auto btn btn-sm btn-primary" :class="{ 'opacity-0': hoverIndex !== i }">Edit</span>
               </div>
             </div>
             <div v-if="screens.length === 0" class="mx-auto d-flex justify-content-center align-items-center my-5">
@@ -630,6 +631,9 @@ export default {
     },
   },
   methods: {
+    openEditScreenModal(s) {
+      window.alert(JSON.stringify(s, null, 2));
+    },
     openUploadModal() {
       nextTick(() => {
         Modal.getOrCreateInstance(document.getElementById("upload-content-modal")).show();
